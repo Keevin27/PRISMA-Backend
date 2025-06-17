@@ -22,9 +22,6 @@ public class Alumno {
     private String correo_alumno;
     private Date fecha_nacimiento_alumno;
     private String direccion_a;
-    private String municipio_a;
-    private String distrito_a;
-    private String departamentoAlumno;
     private String sexo_a;
     private String telefono_alumno;
 	private String enfermedades;
@@ -45,8 +42,8 @@ public class Alumno {
 	}
 	
 	public Alumno(int nie, String nombre_alumno, String apellido_alumno, String correo_alumno,
-			Date fecha_nacimiento_alumno, String direccion_a, String municipio_a, String distrito_a,
-			String departamentoAlumno, String sexo_a, String telefono_alumno, String enfermedades, String medicamento,
+			Date fecha_nacimiento_alumno, String direccion_a,
+			String sexo_a, String telefono_alumno, String enfermedades, String medicamento,
 			String vive_con, String parentezco_encargado, String telefono_encargado, String correo_encargado,
 			String dui_encargado, String lugar_de_trabajo, boolean estado_alumno, Grado grado) {
 		this.nie = nie;
@@ -55,9 +52,6 @@ public class Alumno {
 		this.correo_alumno = correo_alumno;
 		this.fecha_nacimiento_alumno = fecha_nacimiento_alumno;
 		this.direccion_a = direccion_a;
-		this.municipio_a = municipio_a;
-		this.distrito_a = distrito_a;
-		this.departamentoAlumno = departamentoAlumno;
 		this.sexo_a = sexo_a;
 		this.telefono_alumno = telefono_alumno;
 		this.enfermedades = enfermedades;
@@ -109,24 +103,6 @@ public class Alumno {
 	}
 	public void setDireccion_a(String direccion_a) {
 		this.direccion_a = direccion_a;
-	}
-	public String getMunicipio_a() {
-		return municipio_a;
-	}
-	public void setMunicipio_a(String municipio_a) {
-		this.municipio_a = municipio_a;
-	}
-	public String getDistrito_a() {
-		return distrito_a;
-	}
-	public void setDistrito_a(String distrito_a) {
-		this.distrito_a = distrito_a;
-	}
-	public String getDepartamentoAlumno() {
-		return departamentoAlumno;
-	}
-	public void setDepartamentoAlumno(String departamentoAlumno) {
-		this.departamentoAlumno = departamentoAlumno;
 	}
 	public String getSexo_a() {
 		return sexo_a;
