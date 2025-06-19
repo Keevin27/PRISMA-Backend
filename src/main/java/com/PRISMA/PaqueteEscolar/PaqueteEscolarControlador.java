@@ -28,6 +28,10 @@ public class PaqueteEscolarControlador {
     public List<PaqueteEscolar> listarToddosLosPaquetesEscolares(){
         return repositorio.findAll();
     }
+    @GetMapping("/paquetes-escolares-activos")
+    public List<PaqueteEscolar> listarToddosLosPaquetesEscolaresActivos(){
+        return repositorio.paquetesActivos();
+    }
     @PostMapping("/paquetes-escolares")
     public PaqueteEscolar guardarPaquete(@RequestBody PaqueteEscolar paqueteEscolar) {
         
