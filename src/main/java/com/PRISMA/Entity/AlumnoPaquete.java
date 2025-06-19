@@ -1,11 +1,14 @@
 package com.PRISMA.Entity;
 
-import java.sql.Date;
+import java.time.LocalDate;
+
+import org.hibernate.annotations.UpdateTimestamp;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
@@ -16,20 +19,22 @@ public class AlumnoPaquete {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id_asignacion;
     private boolean paquete_entregado=false;
-    private Date fecha_entrega_p;
+    @UpdateTimestamp
+    private LocalDate fecha_entrega_p;
 
     @ManyToOne
+    @JoinColumn(name = "idAlumno")
     private Alumno alumno;
     @ManyToOne
+    @JoinColumn(name = "id_paquete_e")
     private PaqueteEscolar paqueteEscolar;
     
     
     public AlumnoPaquete() {
     }
-    public AlumnoPaquete(boolean paquete_entregado, Date fecha_entrega_p, Alumno alumno,
+    public AlumnoPaquete(boolean paquete_entregado, Alumno alumno,
             PaqueteEscolar paqueteEscolar) {
         this.paquete_entregado = paquete_entregado;
-        this.fecha_entrega_p = fecha_entrega_p;
         this.alumno = alumno;
         this.paqueteEscolar = paqueteEscolar;
     }
@@ -47,10 +52,10 @@ public class AlumnoPaquete {
     public void setPaquete_entregado(boolean paquete_entregado) {
         this.paquete_entregado = paquete_entregado;
     }
-    public Date getFecha_entrega_p() {
+    public LocalDate getFecha_entrega_p() {
         return fecha_entrega_p;
     }
-    public void setFecha_entrega_p(Date fecha_entrega_p) {
+    public void setFecha_entrega_p(LocalDate fecha_entrega_p) {
         this.fecha_entrega_p = fecha_entrega_p;
     }
     public Alumno getAlumno() {

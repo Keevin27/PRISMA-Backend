@@ -6,6 +6,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
@@ -35,6 +36,7 @@ public class Alumno {
     private boolean estado_alumno;
 
 	@ManyToOne
+	@JoinColumn(name = "id_grado")
 	private Grado grado;
 
 	//CONSTRUCTORES VACIOS Y CON PARAMETROS
@@ -67,6 +69,7 @@ public class Alumno {
 	}
 
 	//GETTERS Y SETTERS
+	
 	
 	public int getNie() {
 		return nie;
@@ -175,5 +178,13 @@ public class Alumno {
 	}
 	public void setGrado(Grado grado) {
 		this.grado = grado;
+	}
+
+	public int getIdAlumno() {
+		return idAlumno;
+	}
+
+	public void setIdAlumno(int idAlumno) {
+		this.idAlumno = idAlumno;
 	}
 }
