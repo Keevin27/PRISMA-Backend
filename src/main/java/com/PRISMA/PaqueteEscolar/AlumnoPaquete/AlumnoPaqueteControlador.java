@@ -73,7 +73,6 @@ public class AlumnoPaqueteControlador {
         AlumnoPaquete asignacion = repositorio.findById(id).orElseThrow(() -> new RuntimeException("No se encontro"));
 
         asignacion.setPaquete_entregado(alumnoPaquete.isPaquete_entregado());
-        asignacion.setFecha_entrega_p(alumnoPaquete.getFecha_entrega_p());
         asignacion.setAlumno(alumnoPaquete.getAlumno());
         asignacion.setPaqueteEscolar(alumnoPaquete.getPaqueteEscolar());
         AlumnoPaquete asignacionActualizada = repositorio.save(asignacion);

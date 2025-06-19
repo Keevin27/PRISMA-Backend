@@ -12,6 +12,6 @@ import com.PRISMA.Entity.Alumno;
 @Repository
 public interface AlumnoRepositorio extends JpaRepository<Alumno, Integer> {
 
-    @Query("SELECT a FROM Alumno a WHERE a.grado.id_grado = :id_grado")
+    @Query("SELECT a FROM Alumno a WHERE a.grado.id_grado = :id_grado ORDER BY a.apellido_alumno")
     List<Alumno> buscarPorGrado(@Param("id_grado") Integer id_grado);
 }
