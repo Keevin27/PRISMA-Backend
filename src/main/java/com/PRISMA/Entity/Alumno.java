@@ -1,3 +1,4 @@
+
 package com.PRISMA.Entity;
 
 import java.sql.Date;
@@ -11,7 +12,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name="alumnos")
+@Table(name = "alumnos")
 public class Alumno {
 	//CAMPOS DE LA TABLA ALUMNOS
 	@Id
