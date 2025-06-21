@@ -46,7 +46,6 @@ import com.lowagie.text.Element;
 
 @RestController
 @RequestMapping("/expedienteDocente/")
-@CrossOrigin(origins = "http://localhost:4200")
 public class DocenteControlador {
     @Autowired
     private DocenteRepositorio repositorio;

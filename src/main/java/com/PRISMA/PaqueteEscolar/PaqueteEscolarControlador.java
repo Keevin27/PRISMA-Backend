@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -19,11 +19,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 @RestController
 @RequestMapping("/PaqEsc/")
-@CrossOrigin(origins ="http://localhost:4200/")
 public class PaqueteEscolarControlador {
 
     @Autowired
     private PaqueteEscolarRepositorio repositorio;
+    
     @GetMapping("/paquetes-escolares")
     public List<PaqueteEscolar> listarToddosLosPaquetesEscolares(){
         return repositorio.findAll();
@@ -32,11 +32,15 @@ public class PaqueteEscolarControlador {
     public List<PaqueteEscolar> listarToddosLosPaquetesEscolaresActivos(){
         return repositorio.paquetesActivos();
     }
+
+    @PreAuthorize("hasRole('DIRECTOR')")
     @PostMapping("/paquetes-escolares")
     public PaqueteEscolar guardarPaquete(@RequestBody PaqueteEscolar paqueteEscolar) {
         
         return repositorio.save(paqueteEscolar);
     }
+
+
     @PutMapping("/paquetes-escolares/{id}")
     public ResponseEntity<PaqueteEscolar> actualizarPaquete(@PathVariable int id, @RequestBody PaqueteEscolar paqueteEscolar) {
         PaqueteEscolar paqueteescolar = repositorio.findById(id).orElseThrow(()-> new RuntimeException("No se encontro"));

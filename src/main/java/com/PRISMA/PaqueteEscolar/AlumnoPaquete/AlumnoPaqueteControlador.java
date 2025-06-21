@@ -24,7 +24,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 @RestController
 @RequestMapping("/AluPaq/")
-@CrossOrigin(origins = "http://localhost:4200/")
 public class AlumnoPaqueteControlador {
 
     @Autowired

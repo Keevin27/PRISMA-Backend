@@ -15,7 +15,7 @@ import org.springframework.stereotype.Service;
 import com.PRISMA.Entity.Usuario;
 
 @Service
-public class MyUserDetailsService implements UserDetailsService {
+public class UserDetailsServiceImpl implements UserDetailsService {
 
     @Autowired
     private UsuarioRepositorio usuarioRepo;
