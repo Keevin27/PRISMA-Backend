@@ -72,7 +72,7 @@ public class DocenteControlador {
 
         Usuario user = new Usuario();
         user.setCorreoUsuario(docente.getCorreo_Docente());
-        user.setPasswordUsuario(encoder.encode("123456")); // contraseña por defecto cifrada
+        user.setPasswordUsuario(encoder.encode("admin123")); // contraseña por defecto cifrada
         user.setFechaRegistro(Date.valueOf(LocalDate.now()));
         user.setUsuarioActivo(true);
 
