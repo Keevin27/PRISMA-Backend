@@ -42,15 +42,20 @@ public class UsuarioController {
 
     @PostMapping
     public ResponseEntity<Usuario> crear(@RequestBody Usuario usuario) {
-        Set<Rol> roles = usuario.getRoles().stream().map(rol -> 
-            rolRepository.findById(rol.getId())
-                .orElseThrow(() -> new RuntimeException("Rol no encontrado"))
-        ).collect(Collectors.toSet());
+        if (usuario.getRoles().isEmpty()) {
+            throw new RuntimeException("Debe asignar al menos un rol");
+        }
 
-        usuario.setRoles(roles);
+        Rol rol = usuario.getRoles().iterator().next();
+
+        Rol rolExistente = rolRepository.findById(rol.getId())
+                .orElseThrow(() -> new RuntimeException("Rol no encontrado"));
+
+        usuario.setRoles(Set.of(rolExistente));
         usuario.setFechaRegistro(new Date());
         usuario.setUsuarioActivo(true);
         usuario.setPasswordUsuario(encoder.encode(usuario.getPasswordUsuario()));
+
         Usuario nuevo = usuarioService.guardar(usuario);
         return new ResponseEntity<>(nuevo, HttpStatus.CREATED);
     }
@@ -61,17 +66,23 @@ public class UsuarioController {
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
         usuario.setCorreoUsuario(datos.getCorreoUsuario());
-        usuario.setPasswordUsuario(datos.getPasswordUsuario());
         usuario.setUsuarioActivo(datos.getUsuarioActivo());
-        usuario.setPasswordUsuario(encoder.encode(datos.getPasswordUsuario()));
 
-        Set<Rol> roles = datos.getRoles().stream().map(rol ->
-            rolRepository.findById(rol.getId())
-                .orElseThrow(() -> new RuntimeException("Rol no encontrado"))
-        ).collect(Collectors.toSet());
+        if (datos.getPasswordUsuario() != null && !datos.getPasswordUsuario().isEmpty()) {
+            usuario.setPasswordUsuario(encoder.encode(datos.getPasswordUsuario()));
+        }
 
-        usuario.setRoles(roles);
-        
+        if (datos.getRoles().isEmpty()) {
+            throw new RuntimeException("Debe asignar al menos un rol");
+        }
+
+        Rol rol = datos.getRoles().iterator().next();
+
+        Rol rolExistente = rolRepository.findById(rol.getId())
+            .orElseThrow(() -> new RuntimeException("Rol no encontrado"));
+
+        usuario.setRoles(Set.of(rolExistente));
+
         return ResponseEntity.ok(usuarioService.guardar(usuario));
     }
 
