@@ -164,4 +164,15 @@ public class AlumnoControlador {
         return repositorio.buscarAlumnosActivos();
     }
 
+    //Buscar por ID
+    @GetMapping("/alumnos/id/{id}")
+    public ResponseEntity<Alumno> obtenerAlumnoPorId(@PathVariable int id) {
+        Optional<Alumno> alumno = repositorio.findById(id);
+        if (alumno.isPresent()) {
+            return ResponseEntity.ok(alumno.get());
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
 }
