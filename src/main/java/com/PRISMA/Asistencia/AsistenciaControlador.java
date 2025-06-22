@@ -1,46 +1,61 @@
 package com.PRISMA.Asistencia;
+
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import com.PRISMA.Alumno.AlumnoRepositorio;
+import com.PRISMA.Entity.Alumno;
 import com.PRISMA.Entity.AsistenciaAlumno;
-import com.PRISMA.Entity.PaqueteEscolar;
 
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-
-
- 
 @RestController
 @RequestMapping("/AsisAlum/")
-@CrossOrigin(origins ="http://localhost:4200/")
+@CrossOrigin(origins = "http://localhost:4200/")
 public class AsistenciaControlador {
 
     @Autowired
     private AsistenciaServicio asistenciaServicio;
+
+    @Autowired
     private AsistenciaRepositorio repositorio;
-    
-    //:8080/AsisAlum/asistencia-alumno
+
+    @Autowired
+    private AlumnoRepositorio alumnoRepository;
+
+    /**
+     * Obtener todas las asistencias
+     */
     @GetMapping("/asistencia-alumno")
-    public List<AsistenciaAlumno> obtenerAsistenciaAlumnos(){
-        List<AsistenciaAlumno> asistenciaAlumnos = this.asistenciaServicio.listarAsistencia();
-
-        //  asistenciaAlumnos.forEach(asistenciaAlumno -> logger.info());
-        return asistenciaAlumnos;
+    public List<AsistenciaAlumno> obtenerAsistenciaAlumnos() {
+        return repositorio.findAll();
     }
 
-    @PostMapping("/guardar-asistencia")
-    public AsistenciaAlumno guardarAsistencia(@RequestBody AsistenciaAlumno asistenciaAlumno) {
-        
-       // return asistenciaAlumno = this.asistenciaRepositorio.save(asistenciaAlumno);
-       return repositorio.save(asistenciaAlumno);
+    /**
+     * Obtener asistencias por grado y rango de fechas
+     * Ejemplo de URL: 
+     * http://localhost:8080/AsisAlum/asistencia-alumno-filtro?idGrado=1&inicio=2025-06-01&fin=2025-06-30
+     */
+    @GetMapping("/asistencia-alumno-filtro")
+    public List<AsistenciaAlumno> obtenerAsistenciaPorGradoYFechas(
+            @RequestParam int idGrado,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate inicio,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fin) {
+        return repositorio.findByGradoAndAnioAsistenciaAlumnos(idGrado, inicio, fin);
     }
 
+    /**
+     * Guardar nueva asistencia de un alumno
+     */
+    @PostMapping("/asistencia-alumno")
+    public AsistenciaAlumno guardarAsistenciaAlumno(@RequestBody AsistenciaAlumno asistenciaAlumno) {
+        Alumno alumnoExistente = alumnoRepository.findById(asistenciaAlumno.getAlumno().getIdAlumno())
+                .orElseThrow(() -> new RuntimeException("Alumno no encontrado"));
+
+        asistenciaAlumno.setAlumno(alumnoExistente);
+        return repositorio.save(asistenciaAlumno);
+    }
 }
