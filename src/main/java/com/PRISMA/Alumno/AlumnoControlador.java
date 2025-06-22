@@ -37,17 +37,6 @@ public class AlumnoControlador {
         return repositorio.buscarPorGrado(id_grado);
     }
 
-    // Obtener alumno por ID - RUTA CORREGIDA
-    @GetMapping("/alumno/{id}")
-    public ResponseEntity<Alumno> obtenerAlumnoPorId(@PathVariable int id) {
-        Optional<Alumno> alumno = repositorio.findById(id);
-        if (alumno.isPresent()) {
-            return ResponseEntity.ok(alumno.get());
-        } else {
-            return ResponseEntity.notFound().build();
-        }
-    }
-
     // Buscar alumno por NIE
     @GetMapping("/alumnos/nie/{nie}")
     public ResponseEntity<Alumno> obtenerAlumnoPorNie(@PathVariable int nie) {
@@ -175,9 +164,4 @@ public class AlumnoControlador {
         return repositorio.buscarAlumnosActivos();
     }
 
-    // Buscar alumnos por nombre o apellido
-    @GetMapping("/alumnos/buscar/{termino}")
-    public List<Alumno> buscarAlumnos(@PathVariable String termino) {
-        return repositorio.buscarPorNombreOApellido(termino);
-    }
 }
