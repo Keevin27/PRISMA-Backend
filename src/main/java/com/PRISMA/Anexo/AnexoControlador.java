@@ -25,7 +25,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/anexos")
+@RequestMapping("/anexos/docente")
 @CrossOrigin(origins = "http://localhost:4200")
 public class AnexoControlador {
      @Autowired
@@ -34,7 +34,7 @@ public class AnexoControlador {
     @Autowired
     private DocenteRepositorio docenteRepositorio;
 
-    @GetMapping("/docente/{duiDocente}")
+    @GetMapping("/{duiDocente}")
     public ResponseEntity<List<AnexoDTO>> obtenerAnexosPorDocente(@PathVariable String duiDocente) {
         List<AnexoDTO> dtoList = anexoRepositorio.findAnexosDTOByDocente(duiDocente);
     return ResponseEntity.ok(dtoList);
@@ -44,12 +44,12 @@ public class AnexoControlador {
         Anexo anexo = anexoRepositorio.findById(id_Anexo_D).orElseThrow(() -> new RuntimeException("No existe"));
 
         return ResponseEntity.ok()
-            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + anexo.getNombre_Anexo_D() + "\"")
+            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + anexo.getNombre_Anexo_D() +".pdf"+ "\"")
             .contentType(MediaType.APPLICATION_OCTET_STREAM)
             .body(anexo.getDatos_Anexo_D());
     }
 
-
+    //Eliminar Anexo
     @DeleteMapping("/{id_Anexo_D}")
     public ResponseEntity<?> eliminarAnexo(@PathVariable("id_Anexo_D") Long id) {
         if (!anexoRepositorio.existsById(id)) {
@@ -60,7 +60,7 @@ public class AnexoControlador {
     }
 
     // Agregar anexo a un docente
-    @PostMapping("/docente/{duiDocente}")
+    @PostMapping("/{duiDocente}")
     public Anexo agregarAnexo(@PathVariable String duiDocente, @RequestBody Anexo anexo) {
         Optional<Docente> docenteOpt = docenteRepositorio.findById(duiDocente);
         if (docenteOpt.isPresent()) {
