@@ -1,5 +1,6 @@
 package com.PRISMA.Asistencia;
 
+import java.sql.Date;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -36,7 +37,7 @@ public class AsistenciaControlador {
 
     /**
      * Obtener asistencias por grado y rango de fechas
-     * Ejemplo de URL: 
+     * Ejemplo de URL:
      * http://localhost:8080/AsisAlum/asistencia-alumno-filtro?idGrado=1&inicio=2025-06-01&fin=2025-06-30
      */
     @GetMapping("/asistencia-alumno-filtro")
@@ -57,5 +58,25 @@ public class AsistenciaControlador {
 
         asistenciaAlumno.setAlumno(alumnoExistente);
         return repositorio.save(asistenciaAlumno);
+    }
+
+    // Devuelve lista de un grado y fecha especifico    
+    @GetMapping("/asistencia-alumno-filtro-dia")
+    public List<AsistenciaAlumno> obtenerAsistenciaPorGradoYFecha(
+            @RequestParam int idGrado,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha) {
+
+        return repositorio.findByGradoAndFechaAsistenciaAlumnos(idGrado, fecha);
+    }
+
+    @PutMapping("/asistencia-alumno/{id}")
+    public ResponseEntity<AsistenciaAlumno> actualizarAsistencia(@PathVariable int id,
+            @RequestBody AsistenciaAlumno asistencia) {
+        AsistenciaAlumno asis = repositorio.findById(id).orElseThrow(() -> new RuntimeException("No se encontro"));
+
+        asis.setEstado_asistencia(asistencia.getEstado_asistencia());
+        
+        AsistenciaAlumno asistenciaActualizada = repositorio.save(asis);
+        return ResponseEntity.ok(asistenciaActualizada);
     }
 }
