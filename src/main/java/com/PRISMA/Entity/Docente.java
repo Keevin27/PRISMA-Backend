@@ -2,7 +2,6 @@ package com.PRISMA.Entity;
 
 import java.sql.Date;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
