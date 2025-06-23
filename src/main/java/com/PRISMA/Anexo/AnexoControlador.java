@@ -1,6 +1,7 @@
 package com.PRISMA.Anexo;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -27,7 +28,7 @@ import java.util.Optional;
 @RequestMapping("/anexos/docente")
 @CrossOrigin(origins = "http://localhost:4200")
 public class AnexoControlador {
-     @Autowired
+    @Autowired
     private AnexoRepositorio anexoRepositorio;
 
     @Autowired
@@ -36,19 +37,30 @@ public class AnexoControlador {
     @GetMapping("/{duiDocente}/archivos")
     public ResponseEntity<List<AnexoDTO>> obtenerAnexosPorDocente(@PathVariable String duiDocente) {
         List<AnexoDTO> dtoList = anexoRepositorio.findAnexosDTOByDocente(duiDocente);
-    return ResponseEntity.ok(dtoList);
+        return ResponseEntity.ok(dtoList);
     }
+
     @GetMapping("/{id_Anexo_D}")
     public ResponseEntity<byte[]> descargarAnexo(@PathVariable Long id_Anexo_D) {
         Anexo anexo = anexoRepositorio.findById(id_Anexo_D).orElseThrow(() -> new RuntimeException("No existe"));
 
+        String nombreArchivo = anexo.getNombre_Anexo_D();
+        if (nombreArchivo == null || nombreArchivo.trim().isEmpty()) {
+            nombreArchivo = "anexo";
+        }
+
+        if (!nombreArchivo.toLowerCase().endsWith(".pdf")) {
+            nombreArchivo += ".pdf";
+        }
+
         return ResponseEntity.ok()
-            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + anexo.getNombre_Anexo_D() +".pdf"+ "\"")
-            .contentType(MediaType.APPLICATION_PDF)
-            .body(anexo.getDatos_Anexo_D());
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                         ContentDisposition.attachment().filename(nombreArchivo).build().toString())
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(anexo.getDatos_Anexo_D());
     }
 
-    //Eliminar Anexo
+    // Eliminar Anexo
     @DeleteMapping("/{id_Anexo_D}")
     public ResponseEntity<?> eliminarAnexo(@PathVariable("id_Anexo_D") Long id) {
         if (!anexoRepositorio.existsById(id)) {
