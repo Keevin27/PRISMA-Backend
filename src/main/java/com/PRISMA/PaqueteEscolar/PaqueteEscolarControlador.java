@@ -24,6 +24,7 @@ public class PaqueteEscolarControlador {
     @Autowired
     private PaqueteEscolarRepositorio repositorio;
     
+
     @GetMapping("/paquetes-escolares")
     public List<PaqueteEscolar> listarToddosLosPaquetesEscolares(){
         return repositorio.findAll();
