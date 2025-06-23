@@ -1,7 +1,9 @@
 package com.PRISMA.Alumno;
 
 import java.awt.Color;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.io.ByteArrayOutputStream;
 
@@ -24,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.PRISMA.Entity.Alumno;
 import com.lowagie.text.Document;
 import com.lowagie.text.Font;
+import com.lowagie.text.Image;
 import com.lowagie.text.PageSize;
 import com.lowagie.text.Paragraph;
 import com.lowagie.text.pdf.PdfWriter;
@@ -64,34 +67,31 @@ public class AlumnoControlador {
 
     // Crear nuevo alumno
     @PostMapping("/crearalumno")
-    public ResponseEntity<String> guardarAlumno(@RequestBody Alumno alumno) {
+    public ResponseEntity<Map<String, String>> guardarAlumno(@RequestBody Alumno alumno) {
+        Map<String, String> respuesta = new HashMap<>();
         try {
-            // Verificar si el NIE ya existe
             Optional<Alumno> existeNie = repositorio.buscarPorNie(alumno.getNie());
             if (existeNie.isPresent()) {
-                return ResponseEntity.badRequest()
-                    .body("Error: El NIE " + alumno.getNie() + " ya está registrado.");
+                respuesta.put("error", "El NIE " + alumno.getNie() + " ya está registrado.");
+                return ResponseEntity.badRequest().body(respuesta);
             }
-            
-            // Establecer el estado como activo por defecto si no viene definido
+
             if (!alumno.isEstado_alumno()) {
                 alumno.setEstado_alumno(true);
             }
-            
-            // Validar que el grado no sea nulo
+
             if (alumno.getGrado() == null) {
-                return ResponseEntity.badRequest()
-                    .body("Error: Debe seleccionar un grado válido.");
+                respuesta.put("error", "Debe seleccionar un grado válido.");
+                return ResponseEntity.badRequest().body(respuesta);
             }
-            
+
             Alumno nuevoAlumno = repositorio.save(alumno);
-            return ResponseEntity.ok("Alumno guardado exitosamente con ID: " + nuevoAlumno.getIdAlumno());
-            
+            respuesta.put("mensaje", "Alumno guardado exitosamente con ID: " + nuevoAlumno.getIdAlumno());
+            return ResponseEntity.ok(respuesta);
+
         } catch (Exception e) {
-            System.err.println("Error al guardar alumno: " + e.getMessage());
-            e.printStackTrace();
-            return ResponseEntity.badRequest()
-                .body("Error al guardar el alumno: " + e.getMessage());
+            respuesta.put("error", "Error al guardar el alumno: " + e.getMessage());
+            return ResponseEntity.badRequest().body(respuesta);
         }
     }
 
@@ -99,10 +99,10 @@ public class AlumnoControlador {
     @PutMapping("/alumnos/{id}")
     public ResponseEntity<Alumno> actualizarAlumno(@PathVariable int id, @RequestBody Alumno alumnoActualizado) {
         Optional<Alumno> alumnoExistente = repositorio.findById(id);
-        
+
         if (alumnoExistente.isPresent()) {
             Alumno alumno = alumnoExistente.get();
-            
+
             // Verificar si el NIE cambió y si ya existe en otro alumno
             if (alumno.getNie() != alumnoActualizado.getNie()) {
                 Optional<Alumno> existeNie = repositorio.buscarPorNie(alumnoActualizado.getNie());
@@ -110,7 +110,7 @@ public class AlumnoControlador {
                     return ResponseEntity.badRequest().build();
                 }
             }
-            
+
             // Actualizar campos
             alumno.setNie(alumnoActualizado.getNie());
             alumno.setNombre_alumno(alumnoActualizado.getNombre_alumno());
@@ -129,12 +129,12 @@ public class AlumnoControlador {
             alumno.setDui_encargado(alumnoActualizado.getDui_encargado());
             alumno.setLugar_de_trabajo(alumnoActualizado.getLugar_de_trabajo());
             alumno.setEstado_alumno(alumnoActualizado.isEstado_alumno());
-            
+
             // Validar y actualizar grado
             if (alumnoActualizado.getGrado() != null) {
                 alumno.setGrado(alumnoActualizado.getGrado());
             }
-            
+
             Alumno alumnoGuardado = repositorio.save(alumno);
             return ResponseEntity.ok(alumnoGuardado);
         } else {
@@ -164,7 +164,7 @@ public class AlumnoControlador {
     @PutMapping("/alumnos/{id}/estado")
     public ResponseEntity<Alumno> cambiarEstadoAlumno(@PathVariable int id) {
         Optional<Alumno> alumno = repositorio.findById(id);
-        
+
         if (alumno.isPresent()) {
             Alumno a = alumno.get();
             a.setEstado_alumno(!a.isEstado_alumno());
@@ -181,7 +181,7 @@ public class AlumnoControlador {
         return repositorio.buscarAlumnosActivos();
     }
 
-    //Buscar por ID
+    // Buscar por ID
     @GetMapping("/alumnos/id/{id}")
     public ResponseEntity<Alumno> obtenerAlumnoPorId(@PathVariable int id) {
         Optional<Alumno> alumno = repositorio.findById(id);
@@ -219,7 +219,14 @@ public class AlumnoControlador {
             Font subtituloFont = new Font(Font.HELVETICA, 12, Font.BOLD);
             Font textoFont = new Font(Font.HELVETICA, 11);
 
-            Paragraph header = new Paragraph("CENTRO ESCOLAR GUSTAVO VIDES VALDES\nLOURDES COLÓN\nEXPEDIENTE PERSONAL ALUMNO: DATOS PERSONALES", tituloFont);
+            Image logo = Image.getInstance("src/main/resources/static/logo_GVV.png");
+            logo.scaleToFit(100, 100);
+            logo.setAbsolutePosition(500, 700);
+            document.add(logo);
+
+            Paragraph header = new Paragraph(
+                    "CENTRO ESCOLAR GUSTAVO VIDES VALDES\nLOURDES COLÓN\nEXPEDIENTE PERSONAL ALUMNO: DATOS PERSONALES",
+                    tituloFont);
             header.setAlignment(Element.ALIGN_CENTER);
             header.setSpacingAfter(20);
             document.add(header);
@@ -237,19 +244,25 @@ public class AlumnoControlador {
 
             // Nombre y apellido
             table.addCell(new PdfPCell(new Paragraph("Nombre: ", subtituloFont)));
-            table.addCell(new PdfPCell(new Paragraph(alumno.getNombre_alumno() + " " + alumno.getApellido_alumno(), textoFont)));
+            table.addCell(new PdfPCell(
+                    new Paragraph(alumno.getNombre_alumno() + " " + alumno.getApellido_alumno(), textoFont)));
 
             // Fecha de Nacimiento
             table.addCell(new PdfPCell(new Paragraph("Fecha de Nacimiento: ", subtituloFont)));
-            table.addCell(new PdfPCell(new Paragraph(alumno.getFecha_nacimiento_alumno() != null ? alumno.getFecha_nacimiento_alumno().toString() : "No especificado", textoFont)));
+            table.addCell(new PdfPCell(new Paragraph(
+                    alumno.getFecha_nacimiento_alumno() != null ? alumno.getFecha_nacimiento_alumno().toString()
+                            : "No especificado",
+                    textoFont)));
 
             // Sexo
             table.addCell(new PdfPCell(new Paragraph("Sexo: ", subtituloFont)));
-            table.addCell(new PdfPCell(new Paragraph(alumno.getSexo_a() != null ? alumno.getSexo_a() : "No especificado", textoFont)));
+            table.addCell(new PdfPCell(
+                    new Paragraph(alumno.getSexo_a() != null ? alumno.getSexo_a() : "No especificado", textoFont)));
 
             // Grado
             table.addCell(new PdfPCell(new Paragraph("Grado: ", subtituloFont)));
-            table.addCell(new PdfPCell(new Paragraph(alumno.getGrado() != null ? alumno.getGrado().getNombre_grado() : "No especificado", textoFont)));
+            table.addCell(new PdfPCell(new Paragraph(
+                    alumno.getGrado() != null ? alumno.getGrado().getNombre_grado() : "No especificado", textoFont)));
 
             // Información de Contacto
             PdfPCell contacto = new PdfPCell(new Paragraph("Información de Contacto", tituloFont));
@@ -260,11 +273,13 @@ public class AlumnoControlador {
 
             // Teléfono
             table.addCell(new PdfPCell(new Paragraph("Teléfono: ", subtituloFont)));
-            table.addCell(new PdfPCell(new Paragraph(alumno.getTelefono_alumno() != null ? alumno.getTelefono_alumno() : "No especificado", textoFont)));
+            table.addCell(new PdfPCell(new Paragraph(
+                    alumno.getTelefono_alumno() != null ? alumno.getTelefono_alumno() : "No especificado", textoFont)));
 
             // Correo
             table.addCell(new PdfPCell(new Paragraph("Correo Electrónico: ", subtituloFont)));
-            table.addCell(new PdfPCell(new Paragraph(alumno.getCorreo_alumno() != null ? alumno.getCorreo_alumno() : "No especificado", textoFont)));
+            table.addCell(new PdfPCell(new Paragraph(
+                    alumno.getCorreo_alumno() != null ? alumno.getCorreo_alumno() : "No especificado", textoFont)));
 
             // Dirección
             PdfPCell ubicacion = new PdfPCell(new Paragraph("Dirección", subtituloFont));
@@ -273,7 +288,8 @@ public class AlumnoControlador {
             ubicacion.setBackgroundColor(new Color(230, 230, 230));
             table.addCell(ubicacion);
 
-            PdfPCell direccion = new PdfPCell(new Paragraph(alumno.getDireccion_a() != null ? alumno.getDireccion_a() : "No especificado", textoFont));
+            PdfPCell direccion = new PdfPCell(new Paragraph(
+                    alumno.getDireccion_a() != null ? alumno.getDireccion_a() : "No especificado", textoFont));
             direccion.setColspan(2);
             direccion.setHorizontalAlignment(Element.ALIGN_CENTER);
             table.addCell(direccion);
@@ -287,19 +303,25 @@ public class AlumnoControlador {
 
             // Vive con
             table.addCell(new PdfPCell(new Paragraph("Vive con: ", subtituloFont)));
-            table.addCell(new PdfPCell(new Paragraph(alumno.getVive_con() != null ? alumno.getVive_con() : "No especificado", textoFont)));
+            table.addCell(new PdfPCell(
+                    new Paragraph(alumno.getVive_con() != null ? alumno.getVive_con() : "No especificado", textoFont)));
 
             // Parentezco
             table.addCell(new PdfPCell(new Paragraph("Parentezco: ", subtituloFont)));
-            table.addCell(new PdfPCell(new Paragraph(alumno.getParentezco_encargado() != null ? alumno.getParentezco_encargado() : "No especificado", textoFont)));
+            table.addCell(new PdfPCell(new Paragraph(
+                    alumno.getParentezco_encargado() != null ? alumno.getParentezco_encargado() : "No especificado",
+                    textoFont)));
 
             // Teléfono encargado
             table.addCell(new PdfPCell(new Paragraph("Teléfono Encargado: ", subtituloFont)));
-            table.addCell(new PdfPCell(new Paragraph(alumno.getTelefono_encargado() != null ? alumno.getTelefono_encargado() : "No especificado", textoFont)));
+            table.addCell(new PdfPCell(new Paragraph(
+                    alumno.getTelefono_encargado() != null ? alumno.getTelefono_encargado() : "No especificado",
+                    textoFont)));
 
             // DUI encargado
             table.addCell(new PdfPCell(new Paragraph("DUI Encargado: ", subtituloFont)));
-            table.addCell(new PdfPCell(new Paragraph(alumno.getDui_encargado() != null ? alumno.getDui_encargado() : "No especificado", textoFont)));
+            table.addCell(new PdfPCell(new Paragraph(
+                    alumno.getDui_encargado() != null ? alumno.getDui_encargado() : "No especificado", textoFont)));
 
             // Información Médica
             PdfPCell medica = new PdfPCell(new Paragraph("Información Médica", tituloFont));
@@ -310,11 +332,13 @@ public class AlumnoControlador {
 
             // Enfermedades
             table.addCell(new PdfPCell(new Paragraph("Enfermedades: ", subtituloFont)));
-            table.addCell(new PdfPCell(new Paragraph(alumno.getEnfermedades() != null ? alumno.getEnfermedades() : "Ninguna", textoFont)));
+            table.addCell(new PdfPCell(
+                    new Paragraph(alumno.getEnfermedades() != null ? alumno.getEnfermedades() : "Ninguna", textoFont)));
 
             // Medicamentos
             table.addCell(new PdfPCell(new Paragraph("Medicamentos: ", subtituloFont)));
-            table.addCell(new PdfPCell(new Paragraph(alumno.getMedicamento() != null ? alumno.getMedicamento() : "Ninguno", textoFont)));
+            table.addCell(new PdfPCell(
+                    new Paragraph(alumno.getMedicamento() != null ? alumno.getMedicamento() : "Ninguno", textoFont)));
 
             // Guardamos la tabla en el documento
             document.add(table);
@@ -322,7 +346,8 @@ public class AlumnoControlador {
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_PDF);
-            headers.setContentDispositionFormData("attachment", "expediente_alumno_" + alumno.getNie() + "_" + alumno.getNombre_alumno() + ".pdf");
+            headers.setContentDispositionFormData("attachment",
+                    "expediente_alumno_" + alumno.getNie() + "_" + alumno.getNombre_alumno() + ".pdf");
 
             return new ResponseEntity<>(baos.toByteArray(), headers, HttpStatus.OK);
 
@@ -335,7 +360,7 @@ public class AlumnoControlador {
     @GetMapping("/alumnos/imprimir-listado")
     public ResponseEntity<byte[]> imprimirListadoAlumnos() {
         List<Alumno> alumnos = repositorio.findAll();
-        
+
         if (alumnos.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
@@ -353,30 +378,38 @@ public class AlumnoControlador {
             Font textoFont = new Font(Font.HELVETICA, 10);
             Font headerTableFont = new Font(Font.HELVETICA, 11, Font.BOLD);
 
+            Image logo = Image.getInstance("src/main/resources/static/logo_GVV.png");
+            logo.scaleToFit(100, 100);
+            logo.setAbsolutePosition(500, 700);
+            document.add(logo);
+
             // Título principal
-            Paragraph header = new Paragraph("CENTRO ESCOLAR GUSTAVO VIDES VALDES\nLOURDES COLÓN\nLISTADO DE ALUMNOS", tituloFont);
+            Paragraph header = new Paragraph("CENTRO ESCOLAR GUSTAVO VIDES VALDES\nLOURDES COLÓN\nLISTADO DE ALUMNOS",
+                    tituloFont);
             header.setAlignment(Element.ALIGN_CENTER);
             header.setSpacingAfter(20);
             document.add(header);
 
             // Información adicional
-            Paragraph info = new Paragraph("Total de alumnos: " + alumnos.size() + "\nFecha de impresión: " + java.time.LocalDate.now(), subtituloFont);
+            Paragraph info = new Paragraph(
+                    "Total de alumnos: " + alumnos.size() + "\nFecha de impresión: " + java.time.LocalDate.now(),
+                    subtituloFont);
             info.setSpacingAfter(15);
             document.add(info);
 
             // Crear tabla con las columnas principales
             PdfPTable table = new PdfPTable(4); // 4 columnas: NIE, Nombre, Apellidos, Grado
             table.setWidthPercentage(100);
-            
+
             // Establecer anchos de columnas
-            float[] columnWidths = {15f, 25f, 25f, 35f};
+            float[] columnWidths = { 15f, 25f, 25f, 35f };
             table.setWidths(columnWidths);
 
             // Headers de la tabla
-            String[] headerTexts = {"NIE", "NOMBRE", "APELLIDOS", "GRADO"};
+            String[] headerTexts = { "NIE", "NOMBRE", "APELLIDOS", "GRADO" };
             for (String headerText : headerTexts) {
                 PdfPCell headerCell = new PdfPCell(new Paragraph(headerText, headerTableFont));
-                headerCell.setBackgroundColor(new Color(220, 220, 220)); 
+                headerCell.setBackgroundColor(new Color(220, 220, 220));
                 headerCell.setHorizontalAlignment(Element.ALIGN_CENTER);
                 headerCell.setPadding(8);
                 table.addCell(headerCell);
@@ -391,12 +424,14 @@ public class AlumnoControlador {
                 table.addCell(cellNie);
 
                 // Nombre
-                PdfPCell cellNombre = new PdfPCell(new Paragraph(alumno.getNombre_alumno() != null ? alumno.getNombre_alumno() : "", textoFont));
+                PdfPCell cellNombre = new PdfPCell(
+                        new Paragraph(alumno.getNombre_alumno() != null ? alumno.getNombre_alumno() : "", textoFont));
                 cellNombre.setPadding(5);
                 table.addCell(cellNombre);
 
                 // Apellidos
-                PdfPCell cellApellidos = new PdfPCell(new Paragraph(alumno.getApellido_alumno() != null ? alumno.getApellido_alumno() : "", textoFont));
+                PdfPCell cellApellidos = new PdfPCell(new Paragraph(
+                        alumno.getApellido_alumno() != null ? alumno.getApellido_alumno() : "", textoFont));
                 cellApellidos.setPadding(5);
                 table.addCell(cellApellidos);
 
@@ -433,25 +468,25 @@ public class AlumnoControlador {
     public ResponseEntity<byte[]> imprimirListadoFiltrado(
             @RequestParam(required = false) String anio,
             @RequestParam(required = false) String grado) {
-        
+
         List<Alumno> alumnos = repositorio.findAll();
-        
+
         // Aplicar filtros si se proporcionan
         if (anio != null && !anio.isEmpty()) {
             alumnos = alumnos.stream()
-                .filter(a -> a.getGrado() != null && 
-                            a.getGrado().getAnioAcademico() != null && 
+                    .filter(a -> a.getGrado() != null &&
+                            a.getGrado().getAnioAcademico() != null &&
                             String.valueOf(a.getGrado().getAnioAcademico().getAnio()).equals(anio))
-                .collect(java.util.stream.Collectors.toList());
+                    .collect(java.util.stream.Collectors.toList());
         }
-        
+
         if (grado != null && !grado.isEmpty()) {
             alumnos = alumnos.stream()
-                .filter(a -> a.getGrado() != null && 
+                    .filter(a -> a.getGrado() != null &&
                             String.valueOf(a.getGrado().getId_grado()).equals(grado))
-                .collect(java.util.stream.Collectors.toList());
+                    .collect(java.util.stream.Collectors.toList());
         }
-        
+
         if (alumnos.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
@@ -469,12 +504,17 @@ public class AlumnoControlador {
             Font textoFont = new Font(Font.HELVETICA, 10);
             Font headerTableFont = new Font(Font.HELVETICA, 11, Font.BOLD);
 
+            Image logo = Image.getInstance("src/main/resources/static/logo_GVV.png");
+            logo.scaleToFit(100, 100);
+            logo.setAbsolutePosition(500, 700);
+            document.add(logo);
+
             // Título principal
             String titulo = "CENTRO ESCOLAR GUSTAVO VIDES VALDES\nLOURDES COLÓN\nLISTADO DE ALUMNOS";
             if (anio != null || grado != null) {
                 titulo += " - FILTRADO";
             }
-            
+
             Paragraph header = new Paragraph(titulo, tituloFont);
             header.setAlignment(Element.ALIGN_CENTER);
             header.setSpacingAfter(15);
@@ -483,27 +523,31 @@ public class AlumnoControlador {
             // Información de filtros aplicados
             if (anio != null || grado != null) {
                 String filtrosInfo = "Filtros aplicados: ";
-                if (anio != null) filtrosInfo += "Año: " + anio + " ";
-                if (grado != null) filtrosInfo += "Grado ID: " + grado + " ";
-                
+                if (anio != null)
+                    filtrosInfo += "Año: " + anio + " ";
+                if (grado != null)
+                    filtrosInfo += "Grado ID: " + grado + " ";
+
                 Paragraph filtros = new Paragraph(filtrosInfo, subtituloFont);
                 filtros.setSpacingAfter(10);
                 document.add(filtros);
             }
 
             // Información adicional
-            Paragraph info = new Paragraph("Total de alumnos: " + alumnos.size() + "\nFecha de impresión: " + java.time.LocalDate.now(), subtituloFont);
+            Paragraph info = new Paragraph(
+                    "Total de alumnos: " + alumnos.size() + "\nFecha de impresión: " + java.time.LocalDate.now(),
+                    subtituloFont);
             info.setSpacingAfter(15);
             document.add(info);
 
             // Crear tabla
             PdfPTable table = new PdfPTable(4);
             table.setWidthPercentage(100);
-            float[] columnWidths = {15f, 25f, 25f, 35f};
+            float[] columnWidths = { 15f, 25f, 25f, 35f };
             table.setWidths(columnWidths);
 
             // Headers
-            String[] headerTexts = {"NIE", "NOMBRE", "APELLIDOS", "GRADO"};
+            String[] headerTexts = { "NIE", "NOMBRE", "APELLIDOS", "GRADO" };
             for (String headerText : headerTexts) {
                 PdfPCell headerCell = new PdfPCell(new Paragraph(headerText, headerTableFont));
                 headerCell.setBackgroundColor(new Color(220, 220, 220));
@@ -515,9 +559,11 @@ public class AlumnoControlador {
             // Datos
             for (Alumno alumno : alumnos) {
                 table.addCell(new PdfPCell(new Paragraph(String.valueOf(alumno.getNie()), textoFont)));
-                table.addCell(new PdfPCell(new Paragraph(alumno.getNombre_alumno() != null ? alumno.getNombre_alumno() : "", textoFont)));
-                table.addCell(new PdfPCell(new Paragraph(alumno.getApellido_alumno() != null ? alumno.getApellido_alumno() : "", textoFont)));
-                
+                table.addCell(new PdfPCell(
+                        new Paragraph(alumno.getNombre_alumno() != null ? alumno.getNombre_alumno() : "", textoFont)));
+                table.addCell(new PdfPCell(new Paragraph(
+                        alumno.getApellido_alumno() != null ? alumno.getApellido_alumno() : "", textoFont)));
+
                 String nombreGrado = "";
                 if (alumno.getGrado() != null) {
                     nombreGrado = alumno.getGrado().getNombre_grado();
@@ -533,7 +579,8 @@ public class AlumnoControlador {
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_PDF);
-            headers.setContentDispositionFormData("inline", "listado_alumnos_filtrado_" + java.time.LocalDate.now() + ".pdf");
+            headers.setContentDispositionFormData("inline",
+                    "listado_alumnos_filtrado_" + java.time.LocalDate.now() + ".pdf");
 
             return new ResponseEntity<>(baos.toByteArray(), headers, HttpStatus.OK);
 
