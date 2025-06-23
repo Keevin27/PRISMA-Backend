@@ -1,7 +1,6 @@
 package com.PRISMA.Docente;
 
 import java.awt.Color;
-import java.io.IOException;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.time.Period;
@@ -17,6 +16,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -26,6 +26,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.PRISMA.Docente.Excepciones.ResourceNotFoundException;
 import com.PRISMA.Entity.Docente;
+import com.PRISMA.Entity.Rol;
+import com.PRISMA.Entity.Usuario;
+import com.PRISMA.Seguridad.RolRepositorio;
+import com.PRISMA.Seguridad.UsuarioRepositorio;
 
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -34,7 +38,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import com.lowagie.text.Chunk;
 //
 import com.lowagie.text.Document;
-import com.lowagie.text.DocumentException;
 import com.lowagie.text.Font;
 import com.lowagie.text.Image;
 import com.lowagie.text.PageSize;
@@ -52,10 +55,15 @@ import java.awt.Color;
 
 @RestController
 @RequestMapping("/expedienteDocente/")
-@CrossOrigin(origins = "http://localhost:4200")
 public class DocenteControlador {
     @Autowired
     private DocenteRepositorio repositorio;
+    @Autowired
+    private RolRepositorio rolRepo;
+    @Autowired
+    private UsuarioRepositorio usuarioRepo;
+    @Autowired
+    private BCryptPasswordEncoder encoder;
 
     //ListarDocente
     @GetMapping("/docentes")
@@ -68,7 +76,21 @@ public class DocenteControlador {
     public Docente guardarDocente(@RequestBody Docente docente) {
         docente.setDocente_Activo(true); // activa por defecto
         docente.setFecha_Registro_D(Date.valueOf(LocalDate.now()));; // fecha del sistema
-        return repositorio.save(docente);
+        
+        Docente savedDocente = repositorio.save(docente);
+
+        Usuario user = new Usuario();
+        user.setCorreoUsuario(docente.getCorreo_Docente());
+        user.setPasswordUsuario(encoder.encode("admin123")); // contraseña por defecto cifrada
+        user.setFechaRegistro(Date.valueOf(LocalDate.now()));
+        user.setUsuarioActivo(true);
+
+        Rol rolDocente = rolRepo.findByNombre("ROLE_DOCENTE").orElseThrow(() -> new RuntimeException("Rol no encontrado"));
+        user.getRoles().add(rolDocente);
+
+        usuarioRepo.save(user);
+
+        return savedDocente;
     }
     //BuscarDocente
     @GetMapping("/docentes/{duiDocente}")
