@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.io.ByteArrayOutputStream;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +24,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.PRISMA.Alumno.Matricula.MatriculaRepositorio;
 import com.PRISMA.Entity.Alumno;
+import com.PRISMA.Entity.Matricula;
 import com.lowagie.text.Document;
 import com.lowagie.text.Font;
 import com.lowagie.text.Image;
@@ -41,6 +44,8 @@ public class AlumnoControlador {
 
     @Autowired
     private AlumnoRepositorio repositorio;
+    @Autowired
+    private MatriculaRepositorio matriculaRepositorio;
 
     // Listar todos los alumnos
     @GetMapping("/alumnos")
@@ -80,10 +85,10 @@ public class AlumnoControlador {
                 alumno.setEstado_alumno(true);
             }
 
-            if (alumno.getGrado() == null) {
-                respuesta.put("error", "Debe seleccionar un grado válido.");
-                return ResponseEntity.badRequest().body(respuesta);
-            }
+            // if (alumno.getGrado() == null) {
+            // respuesta.put("error", "Debe seleccionar un grado válido.");
+            // return ResponseEntity.badRequest().body(respuesta);
+            // }
 
             Alumno nuevoAlumno = repositorio.save(alumno);
             respuesta.put("mensaje", "Alumno guardado exitosamente con ID: " + nuevoAlumno.getIdAlumno());
@@ -130,10 +135,10 @@ public class AlumnoControlador {
             alumno.setLugar_de_trabajo(alumnoActualizado.getLugar_de_trabajo());
             alumno.setEstado_alumno(alumnoActualizado.isEstado_alumno());
 
-            // Validar y actualizar grado
-            if (alumnoActualizado.getGrado() != null) {
-                alumno.setGrado(alumnoActualizado.getGrado());
-            }
+            // // Validar y actualizar grado
+            // if (alumnoActualizado.getGrado() != null) {
+            // alumno.setGrado(alumnoActualizado.getGrado());
+            // }
 
             Alumno alumnoGuardado = repositorio.save(alumno);
             return ResponseEntity.ok(alumnoGuardado);
@@ -259,10 +264,11 @@ public class AlumnoControlador {
             table.addCell(new PdfPCell(
                     new Paragraph(alumno.getSexo_a() != null ? alumno.getSexo_a() : "No especificado", textoFont)));
 
-            // Grado
-            table.addCell(new PdfPCell(new Paragraph("Grado: ", subtituloFont)));
-            table.addCell(new PdfPCell(new Paragraph(
-                    alumno.getGrado() != null ? alumno.getGrado().getNombre_grado() : "No especificado", textoFont)));
+            // // Grado
+            // table.addCell(new PdfPCell(new Paragraph("Grado: ", subtituloFont)));
+            // table.addCell(new PdfPCell(new Paragraph(
+            // alumno.getGrado() != null ? alumno.getGrado().getNombre_grado() : "No
+            // especificado", textoFont)));
 
             // Información de Contacto
             PdfPCell contacto = new PdfPCell(new Paragraph("Información de Contacto", tituloFont));
@@ -435,17 +441,17 @@ public class AlumnoControlador {
                 cellApellidos.setPadding(5);
                 table.addCell(cellApellidos);
 
-                // Grado
-                String nombreGrado = "";
-                if (alumno.getGrado() != null) {
-                    nombreGrado = alumno.getGrado().getNombre_grado();
-                    if (alumno.getGrado().getSeccion() != null) {
-                        nombreGrado += " - " + alumno.getGrado().getSeccion();
-                    }
-                }
-                PdfPCell cellGrado = new PdfPCell(new Paragraph(nombreGrado, textoFont));
-                cellGrado.setPadding(5);
-                table.addCell(cellGrado);
+                // // Grado
+                // String nombreGrado = "";
+                // if (alumno.getGrado() != null) {
+                // nombreGrado = alumno.getGrado().getNombre_grado();
+                // if (alumno.getGrado().getSeccion() != null) {
+                // nombreGrado += " - " + alumno.getGrado().getSeccion();
+                // }
+                // }
+                // PdfPCell cellGrado = new PdfPCell(new Paragraph(nombreGrado, textoFont));
+                // cellGrado.setPadding(5);
+                // table.addCell(cellGrado);
             }
 
             document.add(table);
@@ -469,23 +475,29 @@ public class AlumnoControlador {
             @RequestParam(required = false) String anio,
             @RequestParam(required = false) String grado) {
 
-        List<Alumno> alumnos = repositorio.findAll();
-
+        // List<Alumno> alumnos = repositorio.findAll();
+        List<Matricula> matriculas = matriculaRepositorio.findAll();
         // Aplicar filtros si se proporcionan
         if (anio != null && !anio.isEmpty()) {
-            alumnos = alumnos.stream()
-                    .filter(a -> a.getGrado() != null &&
-                            a.getGrado().getAnioAcademico() != null &&
-                            String.valueOf(a.getGrado().getAnioAcademico().getAnio()).equals(anio))
+            matriculas = matriculas.stream()
+                    .filter(m -> m.getGrado() != null &&
+                            m.getGrado().getAnioAcademico() != null &&
+                            String.valueOf(m.getGrado().getAnioAcademico().getAnio()).equals(anio))
                     .collect(java.util.stream.Collectors.toList());
         }
 
         if (grado != null && !grado.isEmpty()) {
-            alumnos = alumnos.stream()
-                    .filter(a -> a.getGrado() != null &&
-                            String.valueOf(a.getGrado().getId_grado()).equals(grado))
+            matriculas = matriculas.stream()
+                    .filter(m -> m.getGrado() != null &&
+                            String.valueOf(m.getGrado().getId_grado()).equals(grado))
                     .collect(java.util.stream.Collectors.toList());
         }
+
+        // Obtener los alumnos desde matrículas filtradas
+        List<Alumno> alumnos = matriculas.stream()
+                .map(Matricula::getAlumno)
+                .distinct() 
+                .collect(Collectors.toList());
 
         if (alumnos.isEmpty()) {
             return ResponseEntity.notFound().build();
@@ -564,14 +576,14 @@ public class AlumnoControlador {
                 table.addCell(new PdfPCell(new Paragraph(
                         alumno.getApellido_alumno() != null ? alumno.getApellido_alumno() : "", textoFont)));
 
-                String nombreGrado = "";
-                if (alumno.getGrado() != null) {
-                    nombreGrado = alumno.getGrado().getNombre_grado();
-                    if (alumno.getGrado().getSeccion() != null) {
-                        nombreGrado += " - " + alumno.getGrado().getSeccion();
-                    }
-                }
-                table.addCell(new PdfPCell(new Paragraph(nombreGrado, textoFont)));
+                // String nombreGrado = "";
+                // if (alumno.getGrado() != null) {
+                // nombreGrado = alumno.getGrado().getNombre_grado();
+                // if (alumno.getGrado().getSeccion() != null) {
+                // nombreGrado += " - " + alumno.getGrado().getSeccion();
+                // }
+                // }
+                // table.addCell(new PdfPCell(new Paragraph(nombreGrado, textoFont)));
             }
 
             document.add(table);

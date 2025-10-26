@@ -16,6 +16,8 @@ public class Grado {
     private int id_grado;
     private String nombre_grado;
     private String seccion;
+    private boolean estadoGrado = true;
+    private String turno_grado;
     @ManyToOne
     @JoinColumn(name = "anio_academico_id")
     private AnioAcademico anioAcademico;
@@ -23,10 +25,13 @@ public class Grado {
     //CONSTRUCTORES
     public Grado() {
     }
-    public Grado(int id_grado, String nombre_grado, String seccion, AnioAcademico anioAcademico) {
-        this.id_grado = id_grado;
+
+    public Grado(String nombre_grado, String seccion, boolean estadoGrado, String turno_grado,
+            AnioAcademico anioAcademico) {
         this.nombre_grado = nombre_grado;
         this.seccion = seccion;
+        this.estadoGrado = estadoGrado;
+        this.turno_grado = turno_grado;
         this.anioAcademico = anioAcademico;
     }
     //GETTERS Y SETTERS 
@@ -53,6 +58,23 @@ public class Grado {
     }
     public void setAnioAcademico(AnioAcademico anioAcademico) {
         this.anioAcademico = anioAcademico;
+    }
+    
+
+    public boolean isEstadoGrado() {
+        return estadoGrado;
+    }
+
+    public void setEstadoGrado(boolean estadoGrado) {
+        this.estadoGrado = estadoGrado;
+    }
+
+    public String getTurno_grado() {
+        return turno_grado;
+    }
+
+    public void setTurno_grado(String turno_grado) {
+        this.turno_grado = turno_grado;
     }
 
     @Override
