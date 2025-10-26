@@ -17,7 +17,10 @@ public interface AlumnoPaqueteRepositorio extends JpaRepository<AlumnoPaquete, I
     List<AlumnoPaquete> findByFechaEntre(@Param("inicio") LocalDate inicio, @Param("fin") LocalDate fin);
 
     
-    @Query("SELECT a FROM AlumnoPaquete a WHERE a.alumno.grado.id_grado = :idGrado AND a.fecha_entrega_p BETWEEN :inicio AND :fin")
+    // @Query("SELECT a FROM AlumnoPaquete a WHERE a.alumno.grado.id_grado = :idGrado AND a.fecha_entrega_p BETWEEN :inicio AND :fin")
+    // List<AlumnoPaquete> findByGradoAndAnioEntrega(@Param("idGrado") int idGrado, @Param("inicio") LocalDate inicio, @Param("fin") LocalDate fin);
+    
+    @Query("SELECT a FROM AlumnoPaquete a JOIN Matricula m ON m.alumno.idAlumno = a.alumno.idAlumno WHERE m.grado.id_grado = :idGrado AND a.fecha_entrega_p BETWEEN :inicio AND :fin")
     List<AlumnoPaquete> findByGradoAndAnioEntrega(@Param("idGrado") int idGrado, @Param("inicio") LocalDate inicio, @Param("fin") LocalDate fin);
 
 }

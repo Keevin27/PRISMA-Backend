@@ -14,7 +14,7 @@ import com.PRISMA.Entity.Alumno;
 public interface AlumnoRepositorio extends JpaRepository<Alumno, Integer> {
 
     // Buscar alumnos por grado (ordenados por apellido)
-    @Query("SELECT a FROM Alumno a WHERE a.grado.id_grado = :id_grado ORDER BY a.apellido_alumno")
+    @Query("SELECT a FROM Alumno a JOIN Matricula m ON m.alumno.idAlumno = a.idAlumno WHERE m.grado.id_grado = :id_grado ORDER BY a.apellido_alumno")
     List<Alumno> buscarPorGrado(@Param("id_grado") Integer id_grado);
 
     // Buscar alumno por NIE
@@ -26,7 +26,7 @@ public interface AlumnoRepositorio extends JpaRepository<Alumno, Integer> {
     List<Alumno> buscarAlumnosActivos();
 
      // Contar alumnos por grado
-    @Query("SELECT COUNT(a) FROM Alumno a WHERE a.grado.id_grado = :id_grado AND a.estado_alumno = true")
+    @Query("SELECT COUNT(a) FROM Alumno a JOIN Matricula m ON m.alumno.idAlumno = a.idAlumno WHERE m.grado.id_grado = :id_grado AND a.estado_alumno = true")
     Long contarAlumnosPorGrado(@Param("id_grado") Integer id_grado);
 
     // Verificar si existe un NIE (para validaciones)
