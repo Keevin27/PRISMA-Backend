@@ -308,11 +308,12 @@ public class DocenteControlador {
         return ResponseEntity.ok(existe);
     }
 
+    
     private int calcularEdad(Date fecha_Nacimiento_D) {
         if (fecha_Nacimiento_D == null) {
             return 0; // o puedes retornar -1 o dejar vacío en el PDF
         }
         LocalDate nacimiento = fecha_Nacimiento_D.toLocalDate();
-        return Period.between(nacimiento, LocalDate.now()).getYears();
+        return Period.between(nacimiento , LocalDate.now()).getYears();
     }
 }
