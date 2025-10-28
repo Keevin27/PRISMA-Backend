@@ -2,13 +2,15 @@
 package com.PRISMA.Entity;
 
 import java.sql.Date;
+import java.util.ArrayList;
+import java.util.List;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 @Entity
@@ -36,9 +38,8 @@ public class Alumno {
     private String lugar_de_trabajo;
     private boolean estado_alumno;
 
-	@ManyToOne
-	@JoinColumn(name = "id_grado")
-	private Grado grado;
+	@OneToMany(mappedBy = "alumno", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Matricula> matriculas = new ArrayList<>();
 
 	//CONSTRUCTORES VACIOS Y CON PARAMETROS
 	public Alumno() {
@@ -48,7 +49,7 @@ public class Alumno {
 			Date fecha_nacimiento_alumno, String direccion_a,
 			String sexo_a, String telefono_alumno, String enfermedades, String medicamento,
 			String vive_con, String parentezco_encargado, String telefono_encargado, String correo_encargado,
-			String dui_encargado, String lugar_de_trabajo, boolean estado_alumno, Grado grado) {
+			String dui_encargado, String lugar_de_trabajo, boolean estado_alumno) {
 		this.nie = nie;
 		this.nombre_alumno = nombre_alumno;
 		this.apellido_alumno = apellido_alumno;
@@ -66,7 +67,6 @@ public class Alumno {
 		this.dui_encargado = dui_encargado;
 		this.lugar_de_trabajo = lugar_de_trabajo;
 		this.estado_alumno = estado_alumno;
-		this.grado = grado;
 	}
 
 	//GETTERS Y SETTERS
@@ -173,12 +173,6 @@ public class Alumno {
 	}
 	public void setEstado_alumno(boolean estado_alumno) {
 		this.estado_alumno = estado_alumno;
-	}
-	public Grado getGrado() {
-		return grado;
-	}
-	public void setGrado(Grado grado) {
-		this.grado = grado;
 	}
 
 	public int getIdAlumno() {
