@@ -1,5 +1,7 @@
 package com.PRISMA.Entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -16,14 +18,17 @@ public class Bloque {
 
     @ManyToOne
     @JoinColumn(name = "id_grado",referencedColumnName = "id_grado")
+    @JsonManagedReference
     private Grado grado;
 
     @ManyToOne
     @JoinColumn(name = "duiDocente", referencedColumnName = "duiDocente")
+    @JsonManagedReference
     private Docente docente;
 
     @ManyToOne
     @JoinColumn(name = "codigo_materia", referencedColumnName = "codigo_materia")
+    @JsonManagedReference
     private Materia materia;
     private Integer anioAcademico;
 
