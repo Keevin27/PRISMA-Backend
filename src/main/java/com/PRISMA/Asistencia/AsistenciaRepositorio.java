@@ -14,11 +14,15 @@ import com.PRISMA.Entity.AsistenciaAlumno;
 @Repository
 public interface AsistenciaRepositorio extends JpaRepository<AsistenciaAlumno, Integer> {
 
-    @Query("SELECT a FROM AsistenciaAlumno a WHERE a.alumno.grado.id_grado = :idGrado AND a.fecha_asistencia BETWEEN :inicio AND :fin")
+    @Query("SELECT a FROM AsistenciaAlumno a JOIN Matricula m ON m.alumno.idAlumno = a.alumno.idAlumno WHERE m.grado.id_grado = :idGrado AND a.fecha_asistencia BETWEEN :inicio AND :fin")
     List<AsistenciaAlumno> findByGradoAndAnioAsistenciaAlumnos(@Param("idGrado") int idGrado,
             @Param("inicio") LocalDate inicio, @Param("fin") LocalDate fin);
 
-    @Query("SELECT a FROM   AsistenciaAlumno a WHERE  a.alumno.grado.id_grado = :idGrado AND a.fecha_asistencia = :fecha")
+//     @Query("SELECT a FROM   AsistenciaAlumno a WHERE  a.alumno.grado.id_grado = :idGrado AND a.fecha_asistencia = :fecha")
+//     List<AsistenciaAlumno> findByGradoAndFechaAsistenciaAlumnos(
+//             @Param("idGrado") int idGrado,
+//             @Param("fecha") LocalDate fecha); NUEVA CONSULTA ABAJO V
+        @Query("SELECT a FROM   AsistenciaAlumno a JOIN Matricula m ON m.alumno.idAlumno = a.alumno.idAlumno WHERE  m.grado.id_grado = :idGrado AND a.fecha_asistencia = :fecha")
     List<AsistenciaAlumno> findByGradoAndFechaAsistenciaAlumnos(
             @Param("idGrado") int idGrado,
             @Param("fecha") LocalDate fecha);
