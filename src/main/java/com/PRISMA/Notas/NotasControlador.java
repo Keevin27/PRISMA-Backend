@@ -22,6 +22,7 @@ import com.PRISMA.Entity.Alumno;
 import com.PRISMA.Entity.Bloque;
 import com.PRISMA.Entity.NotaActividad;
 import com.PRISMA.Entity.NotaTrimestre;
+import com.PRISMA.Entity.Trimestre;
 import com.PRISMA.Entity.NotaMateria;
 
 @RestController
@@ -264,74 +265,123 @@ public class NotasControlador {
     }
 
     // ========================================================
-    // Reporte de los 3 trimestres de un alumno
-    // GET /notas/reporte-anual/{nie}?idGrado=1
-    // ========================================================
-    @GetMapping("/reporte-anual/{nie}")
-    public ResponseEntity<Map<String, Object>> obtenerReporteAnual(
-            @PathVariable Integer nie,
-            @RequestParam Integer idGrado) {
+// MÉTODO CORREGIDO: Reporte anual de un alumno
+// Reemplaza el método existente en NotasControlador.java
+// ========================================================
+
+@GetMapping("/reporte-anual/{nie}")
+public ResponseEntity<Map<String, Object>> obtenerReporteAnual(
+        @PathVariable Integer nie,
+        @RequestParam Integer idGrado) {
+    
+    Map<String, Object> respuesta = new HashMap<>();
+    
+    try {
+        Optional<Alumno> alumnoOpt = alumnoRepositorio.buscarPorNie(nie);
+        if (!alumnoOpt.isPresent()) {
+            respuesta.put("error", "Alumno no encontrado");
+            return ResponseEntity.notFound().build();
+        }
         
-        Map<String, Object> respuesta = new HashMap<>();
+        Alumno alumno = alumnoOpt.get();
+        respuesta.put("nie", alumno.getNie());
+        respuesta.put("nombreCompleto", alumno.getNombre_alumno() + " " + alumno.getApellido_alumno());
         
-        try {
-            Optional<Alumno> alumnoOpt = alumnoRepositorio.buscarPorNie(nie);
-            if (!alumnoOpt.isPresent()) {
-                respuesta.put("error", "Alumno no encontrado");
-                return ResponseEntity.notFound().build();
-            }
+        List<Bloque> bloques = bloqueRepositorio.findAll().stream()
+                .filter(b -> b.getGrado().getId_grado() == idGrado)
+                .toList();
+        
+        List<Map<String, Object>> materias = new ArrayList<>();
+        
+        for (Bloque bloque : bloques) {
+            Map<String, Object> materia = new HashMap<>();
+            materia.put("nombreMateria", bloque.getMateria().getNombre_materia());
+            materia.put("idBloque", bloque.getId_bloque());
             
-            Alumno alumno = alumnoOpt.get();
-            respuesta.put("nie", alumno.getNie());
-            respuesta.put("nombreCompleto", alumno.getNombre_alumno() + " " + alumno.getApellido_alumno());
+            List<Double> notasTrimestres = new ArrayList<>();
+            double sumaNotasTrimestres = 0.0;
+            int trimestresConNota = 0;
             
-            List<Bloque> bloques = bloqueRepositorio.findAll().stream()
-                    .filter(b -> b.getGrado().getId_grado() == idGrado)
-                    .toList();
-            
-            List<Map<String, Object>> materias = new ArrayList<>();
-            
-            for (Bloque bloque : bloques) {
-                Map<String, Object> materia = new HashMap<>();
-                materia.put("nombreMateria", bloque.getMateria().getNombre_materia());
+            // Calcular nota de cada trimestre (1, 2, 3)
+            for (int numeroTrimestre = 1; numeroTrimestre <= 3; numeroTrimestre++) {
+                // Buscar trimestre
+                Optional<Trimestre> trimestreOpt = trimestreRepositorio.buscarPorNumeroPeriodo(numeroTrimestre);
                 
-                List<Double> notasTrimestres = new ArrayList<>();
-                
-                for (int t = 1; t <= 3; t++) {
-                    Optional<NotaTrimestre> notaTrimestreOpt = notaTrimestreRepositorio
-                            .buscarPorAlumnoBloqueYTrimestre(nie, bloque.getId_bloque(), t);
+                if (trimestreOpt.isPresent()) {
+                    // Obtener actividades del trimestre
+                    List<Actividad> actividades = actividadRepositorio
+                            .buscarPorBloqueYTrimestre(bloque.getId_bloque(), numeroTrimestre);
                     
-                    if (notaTrimestreOpt.isPresent()) {
-                        notasTrimestres.add(notaTrimestreOpt.get().getNota_trimestre());
+                    if (actividades.isEmpty()) {
+                        notasTrimestres.add(null);
+                        continue;
+                    }
+                    
+                    // Calcular nota del trimestre basada en actividades
+                    double notaTrimestre = 0.0;
+                    double ponderacionTotal = 0.0;
+                    
+                    for (Actividad actividad : actividades) {
+                        Optional<NotaActividad> notaActOpt = notaActividadRepositorio
+                                .buscarPorActividadYAlumno(actividad.getId_actividad(), nie);
+                        
+                        if (notaActOpt.isPresent()) {
+                            double nota = notaActOpt.get().getNota_obtenida();
+                            double ponderacion = actividad.getPonderacion_actividad();
+                            notaTrimestre += (nota * ponderacion) / 100.0;
+                            ponderacionTotal += ponderacion;
+                        }
+                    }
+                    
+                    // Solo agregar si tiene notas
+                    if (ponderacionTotal > 0) {
+                        double notaFinalTrimestre = Math.round(notaTrimestre * 100.0) / 100.0;
+                        notasTrimestres.add(notaFinalTrimestre);
+                        sumaNotasTrimestres += notaFinalTrimestre;
+                        trimestresConNota++;
                     } else {
                         notasTrimestres.add(null);
                     }
-                }
-                
-                materia.put("notasTrimestres", notasTrimestres);
-                
-                // Calcular nota final de la materia
-                Optional<NotaMateria> notaMateriaOpt = notaMateriaRepositorio
-                        .buscarPorAlumnoYBloque(nie, bloque.getId_bloque());
-                
-                if (notaMateriaOpt.isPresent()) {
-                    materia.put("notaFinal", notaMateriaOpt.get().getNota_materia());
-                    materia.put("aprobado", notaMateriaOpt.get().getNota_materia() >= 6.0);
                 } else {
-                    materia.put("notaFinal", null);
-                    materia.put("aprobado", false);
+                    notasTrimestres.add(null);
                 }
-                
-                materias.add(materia);
             }
             
-            respuesta.put("materias", materias);
+            materia.put("notasTrimestres", notasTrimestres);
             
-            return ResponseEntity.ok(respuesta);
+            // Calcular nota final de la materia (promedio de trimestres)
+            if (trimestresConNota > 0) {
+                double notaFinalMateria = Math.round((sumaNotasTrimestres / trimestresConNota) * 100.0) / 100.0;
+                materia.put("notaFinal", notaFinalMateria);
+                materia.put("aprobado", notaFinalMateria >= 6.0);
+            } else {
+                materia.put("notaFinal", null);
+                materia.put("aprobado", false);
+            }
             
-        } catch (Exception e) {
-            respuesta.put("error", "Error al generar reporte: " + e.getMessage());
-            return ResponseEntity.badRequest().body(respuesta);
+            materias.add(materia);
         }
+        
+        respuesta.put("materias", materias);
+        
+        // Calcular estadísticas generales
+        long materiasAprobadas = materias.stream()
+                .filter(m -> m.get("notaFinal") != null && (Double) m.get("notaFinal") >= 6.0)
+                .count();
+        
+        long materiasReprobadas = materias.stream()
+                .filter(m -> m.get("notaFinal") != null && (Double) m.get("notaFinal") < 6.0)
+                .count();
+        
+        respuesta.put("totalMaterias", materias.size());
+        respuesta.put("materiasAprobadas", materiasAprobadas);
+        respuesta.put("materiasReprobadas", materiasReprobadas);
+        
+        return ResponseEntity.ok(respuesta);
+        
+    } catch (Exception e) {
+        respuesta.put("error", "Error al generar reporte: " + e.getMessage());
+        return ResponseEntity.badRequest().body(respuesta);
     }
+}
 }
