@@ -7,10 +7,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
-<<<<<<< HEAD
-=======
 import org.springframework.http.HttpStatus;
->>>>>>> origin/Elias
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -25,7 +23,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-
 
 @RestController
 @RequestMapping("/Grado")
@@ -52,16 +49,12 @@ public class GradoControlador {
         return repositorio.findByAnioAcademico_anio(anio);
     }
 
-<<<<<<< HEAD
     @GetMapping("/grados/activos")
     public ResponseEntity<List<Grado>> obtenerGradosDelAnioActivo() {
         List<Grado> gradosActivos = repositorio.findGradosPorAnioActivo();
         return ResponseEntity.ok(gradosActivos);
     }
-    
-    
-}
-=======
+
     // Método auxiliar para determinar el turno según la sección
     private String obtenerTurnoPorSeccion(String seccion) {
         if (SECCIONES_MATUTINAS.contains(seccion.toUpperCase())) {
@@ -72,7 +65,7 @@ public class GradoControlador {
         return "Matutino"; // Por defecto
     }
 
-    //Crear oferta de grados (múltiples grados con secciones y turnos automáticos)
+    // Crear oferta de grados (múltiples grados con secciones y turnos automáticos)
     @PostMapping("/crear-oferta")
     public ResponseEntity<?> crearOferta(@RequestBody Map<String, Object> request) {
         try {
@@ -93,7 +86,6 @@ public class GradoControlador {
                 List<String> secciones = (List<String>) gradoData.get("secciones");
 
                 for (String seccion : secciones) {
-                    // Determinar automáticamente el turno según la sección
                     String turno = obtenerTurnoPorSeccion(seccion);
                     
                     Grado nuevoGrado = new Grado();
@@ -119,14 +111,12 @@ public class GradoControlador {
     @DeleteMapping("/eliminar/{id}")
     public ResponseEntity<?> eliminarGrado(@PathVariable Integer id) {
         try {
-            // Verificar si el grado existe
             if (!repositorio.existsById(id)) {
                 Map<String, String> error = new HashMap<>();
                 error.put("error", "Grado no encontrado");
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
             }
             
-            // Eliminar el grado
             repositorio.deleteById(id);
             
             Map<String, Object> response = new HashMap<>();
@@ -142,4 +132,4 @@ public class GradoControlador {
         }
     }
 }
->>>>>>> origin/Elias
+

@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
 
 import com.PRISMA.Alumno.AlumnoRepositorio;
 import com.PRISMA.Bloque.BloqueRepositorio;
@@ -26,12 +25,27 @@ import com.PRISMA.Entity.Actividad;
 import com.PRISMA.Entity.Alumno;
 import com.PRISMA.Entity.Bloque;
 import com.PRISMA.Entity.NotaActividad;
+import com.PRISMA.Entity.NotaTrimestre;
 import com.PRISMA.Entity.Trimestre;
 
+import jakarta.annotation.PostConstruct;
+
+import org.springframework.web.bind.annotation.RestController;
+//ALTER TABLE alumnos ADD CONSTRAINT alumnos_nie_unique UNIQUE (nie);
+@CrossOrigin(origins = "http://localhost:4200")
 @RestController
-@RequestMapping("/actividades/")
-@CrossOrigin(origins = "http://localhost:4200/")
+@RequestMapping("/actividades")
 public class ActividadControlador {
+
+        @PostConstruct
+    public void init() {
+        System.out.println("✅ ActividadControlador INICIALIZADO");
+        System.out.println("✅ Rutas disponibles:");
+        System.out.println("   - GET  /actividades/listar");
+        System.out.println("   - POST /actividades/crear");
+        System.out.println("   - PUT  /actividades/actualizar/{id}");
+        System.out.println("   - DELETE /actividades/eliminar/{id}");
+    }
 
     @Autowired
     private ActividadRepositorio actividadRepositorio;
@@ -47,6 +61,9 @@ public class ActividadControlador {
     
     @Autowired
     private NotaActividadRepositorio notaActividadRepositorio;
+
+      @Autowired
+    private NotaTrimestreRepositorio notaTrimestreRepositorio;
 
     // ========================================================
     // PANTALLA 5: Listar actividades por bloque y trimestre
@@ -308,91 +325,190 @@ public class ActividadControlador {
     // POST /actividades/asignar-nota
     // Body: { "idActividad": 1, "nie": 12345, "nota": 8.5 }
     // ========================================================
+    
     @PostMapping("/asignar-nota")
-    public ResponseEntity<Map<String, Object>> asignarNota(@RequestBody Map<String, Object> datos) {
-        Map<String, Object> respuesta = new HashMap<>();
+public ResponseEntity<Map<String, Object>> asignarNota(@RequestBody Map<String, Object> datos) {
+    Map<String, Object> respuesta = new HashMap<>();
+    
+    try {
+        Long idActividad = Long.valueOf(datos.get("idActividad").toString());
+        Integer nie = Integer.valueOf(datos.get("nie").toString());
+        Double nota = Double.valueOf(datos.get("nota").toString());
         
-        try {
-            Long idActividad = Long.valueOf(datos.get("idActividad").toString());
-            Integer nie = Integer.valueOf(datos.get("nie").toString());
-            Double nota = Double.valueOf(datos.get("nota").toString());
-            
-            // Validar nota
-            if (nota < 0 || nota > 10) {
-                respuesta.put("error", "La nota debe estar entre 0 y 10");
-                return ResponseEntity.badRequest().body(respuesta);
-            }
-            
-            // Verificar actividad
-            Optional<Actividad> actividadOpt = actividadRepositorio.findById(idActividad);
-            if (!actividadOpt.isPresent()) {
-                respuesta.put("error", "Actividad no encontrada");
-                return ResponseEntity.notFound().build();
-            }
-            
-            // Verificar alumno
-            Optional<Alumno> alumnoOpt = alumnoRepositorio.buscarPorNie(nie);
-            if (!alumnoOpt.isPresent()) {
-                respuesta.put("error", "Alumno no encontrado");
-                return ResponseEntity.notFound().build();
-            }
-            
-            // Buscar si ya existe una nota
-            Optional<NotaActividad> notaExistenteOpt = notaActividadRepositorio
-                    .buscarPorActividadYAlumno(idActividad, nie);
-            
-            NotaActividad notaActividad;
-            
-            if (notaExistenteOpt.isPresent()) {
-                // Actualizar nota existente
-                notaActividad = notaExistenteOpt.get();
-                notaActividad.setNota_obtenida(nota);
-                notaActividad.setFecha_modificacion(LocalDate.now());
-            } else {
-                // Crear nueva nota
-                notaActividad = new NotaActividad();
-                notaActividad.setActividad(actividadOpt.get());
-                notaActividad.setAlumno(alumnoOpt.get());
-                notaActividad.setNota_obtenida(nota);
-                notaActividad.setFecha_modificacion(LocalDate.now());
-            }
-            
-            notaActividadRepositorio.save(notaActividad);
-            
-            respuesta.put("mensaje", "Nota asignada exitosamente");
-            
-            return ResponseEntity.ok(respuesta);
-            
-        } catch (Exception e) {
-            respuesta.put("error", "Error al asignar nota: " + e.getMessage());
+        // Validar nota
+        if (nota < 0 || nota > 10) {
+            respuesta.put("error", "La nota debe estar entre 0 y 10");
             return ResponseEntity.badRequest().body(respuesta);
         }
+        
+        // Verificar actividad
+        Optional<Actividad> actividadOpt = actividadRepositorio.findById(idActividad);
+        if (!actividadOpt.isPresent()) {
+            respuesta.put("error", "Actividad no encontrada");
+            return ResponseEntity.notFound().build();
+        }
+        
+        Actividad actividad = actividadOpt.get();
+        
+        // Verificar alumno
+        Optional<Alumno> alumnoOpt = alumnoRepositorio.buscarPorNie(nie);
+        if (!alumnoOpt.isPresent()) {
+            respuesta.put("error", "Alumno no encontrado");
+            return ResponseEntity.notFound().build();
+        }
+        
+        // Buscar si ya existe una nota
+        Optional<NotaActividad> notaExistenteOpt = notaActividadRepositorio
+                .buscarPorActividadYAlumno(idActividad, nie);
+        
+        NotaActividad notaActividad;
+        
+        if (notaExistenteOpt.isPresent()) {
+            // Actualizar nota existente
+            notaActividad = notaExistenteOpt.get();
+            notaActividad.setNota_obtenida(nota);
+            notaActividad.setFecha_modificacion(LocalDate.now());
+        } else {
+            // Crear nueva nota
+            notaActividad = new NotaActividad();
+            notaActividad.setActividad(actividadOpt.get());
+            notaActividad.setAlumno(alumnoOpt.get());
+            notaActividad.setNota_obtenida(nota);
+            notaActividad.setFecha_modificacion(LocalDate.now());
+        }
+        
+        notaActividadRepositorio.save(notaActividad);
+        
+        //  CALCULAR Y GUARDAR NOTA DEL TRIMESTRE
+        Integer numeroTrimestre = actividad.getTrimestre().getNumero_periodo();
+        Long idBloque = actividad.getBloque().getId_bloque();
+        calcularYGuardarNotaTrimestre(idBloque, nie, numeroTrimestre);
+        
+        respuesta.put("mensaje", "Nota asignada exitosamente");
+        
+        return ResponseEntity.ok(respuesta);
+        
+    } catch (Exception e) {
+        respuesta.put("error", "Error al asignar nota: " + e.getMessage());
+        return ResponseEntity.badRequest().body(respuesta);
     }
+}    
 
     // ========================================================
     // Eliminar nota de un alumno
     // DELETE /actividades/eliminar-nota/{idNotaActividad}
     // ========================================================
     @DeleteMapping("/eliminar-nota/{idNotaActividad}")
-    public ResponseEntity<Map<String, Object>> eliminarNota(@PathVariable Long idNotaActividad) {
-        Map<String, Object> respuesta = new HashMap<>();
+public ResponseEntity<Map<String, Object>> eliminarNota(@PathVariable Long idNotaActividad) {
+    Map<String, Object> respuesta = new HashMap<>();
+    
+    try {
+        Optional<NotaActividad> notaOpt = notaActividadRepositorio.findById(idNotaActividad);
+        if (!notaOpt.isPresent()) {
+            respuesta.put("error", "Nota no encontrada");
+            return ResponseEntity.notFound().build();
+        }
         
-        try {
-            Optional<NotaActividad> notaOpt = notaActividadRepositorio.findById(idNotaActividad);
-            if (!notaOpt.isPresent()) {
-                respuesta.put("error", "Nota no encontrada");
-                return ResponseEntity.notFound().build();
+        NotaActividad notaActividad = notaOpt.get();
+        
+        // Guardar datos antes de eliminar
+        Integer nie = notaActividad.getAlumno().getNie();
+        Long idBloque = notaActividad.getActividad().getBloque().getId_bloque();
+        Integer numeroTrimestre = notaActividad.getActividad().getTrimestre().getNumero_periodo();
+        
+        // Eliminar la nota
+        notaActividadRepositorio.deleteById(idNotaActividad);
+        
+        //  RECALCULAR Y ACTUALIZAR NOTA DEL TRIMESTRE
+        calcularYGuardarNotaTrimestre(idBloque, nie, numeroTrimestre);
+        
+        respuesta.put("mensaje", "Nota eliminada exitosamente");
+        
+        return ResponseEntity.ok(respuesta);
+        
+    } catch (Exception e) {
+        respuesta.put("error", "Error al eliminar nota: " + e.getMessage());
+        return ResponseEntity.badRequest().body(respuesta);
+    }
+}
+
+    // ========================================================
+// MÉTODO AUXILIAR: Calcular y guardar nota del trimestre
+// ========================================================
+private void calcularYGuardarNotaTrimestre(Long idBloque, Integer nie, Integer numeroTrimestre) {
+    try {
+        // Buscar el trimestre
+        Optional<Trimestre> trimestreOpt = trimestreRepositorio.buscarPorNumeroPeriodo(numeroTrimestre);
+        if (!trimestreOpt.isPresent()) {
+            return;
+        }
+        
+        Trimestre trimestre = trimestreOpt.get();
+        
+        // Buscar el bloque
+        Optional<Bloque> bloqueOpt = bloqueRepositorio.findById(idBloque);
+        if (!bloqueOpt.isPresent()) {
+            return;
+        }
+        
+        // Buscar el alumno
+        Optional<Alumno> alumnoOpt = alumnoRepositorio.buscarPorNie(nie);
+        if (!alumnoOpt.isPresent()) {
+            return;
+        }
+        
+        // Obtener todas las actividades del trimestre
+        List<Actividad> actividades = actividadRepositorio.buscarPorBloqueYTrimestre(idBloque, numeroTrimestre);
+        
+        if (actividades.isEmpty()) {
+            return;
+        }
+        
+        // Calcular nota del trimestre
+        double notaTrimestre = 0.0;
+        double ponderacionTotal = 0.0;
+        
+        for (Actividad actividad : actividades) {
+            Optional<NotaActividad> notaActOpt = notaActividadRepositorio
+                    .buscarPorActividadYAlumno(actividad.getId_actividad(), nie);
+            
+            if (notaActOpt.isPresent()) {
+                double nota = notaActOpt.get().getNota_obtenida();
+                double ponderacion = actividad.getPonderacion_actividad();
+                notaTrimestre += (nota * ponderacion) / 100.0;
+                ponderacionTotal += ponderacion;
+            }
+        }
+        
+        // Solo guardar si hay notas
+        if (ponderacionTotal > 0) {
+            double notaFinal = Math.round(notaTrimestre * 100.0) / 100.0;
+            
+            // Buscar si ya existe un registro de nota_trimestre
+            Optional<NotaTrimestre> notaTrimestreExistente = notaTrimestreRepositorio.buscarPorAlumnoBloqueYTrimestre(nie, idBloque, numeroTrimestre);
+            
+            NotaTrimestre notaTrimestreEntity;
+            
+            if (notaTrimestreExistente.isPresent()) {
+                // Actualizar
+                notaTrimestreEntity = notaTrimestreExistente.get();
+                notaTrimestreEntity.setNota_trimestre(notaFinal);
+            } else {
+                // Crear nuevo
+                notaTrimestreEntity = new NotaTrimestre();
+                notaTrimestreEntity.setAlumno(alumnoOpt.get());
+                notaTrimestreEntity.setBloque(bloqueOpt.get());
+                notaTrimestreEntity.setTrimestre(trimestre);
+                notaTrimestreEntity.setNota_trimestre(notaFinal);
             }
             
-            notaActividadRepositorio.deleteById(idNotaActividad);
+            notaTrimestreRepositorio.save(notaTrimestreEntity);
             
-            respuesta.put("mensaje", "Nota eliminada exitosamente");
-            
-            return ResponseEntity.ok(respuesta);
-            
-        } catch (Exception e) {
-            respuesta.put("error", "Error al eliminar nota: " + e.getMessage());
-            return ResponseEntity.badRequest().body(respuesta);
+            System.out.println(" Nota trimestre guardada: " + notaFinal + " para NIE " + nie);
         }
+        
+    } catch (Exception e) {
+        System.err.println("Error al calcular nota trimestre: " + e.getMessage());
     }
+}
 }
