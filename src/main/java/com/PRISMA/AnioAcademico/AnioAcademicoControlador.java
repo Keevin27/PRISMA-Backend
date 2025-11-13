@@ -45,7 +45,7 @@ public class AnioAcademicoControlador {
 
             AnioAcademico nuevoAnio = new AnioAcademico();
             nuevoAnio.setAnio(anio);
-            nuevoAnio.setAnio_activo(false);
+            nuevoAnio.setAnio_activo(true);
             nuevoAnio.setAnio_cerrado(false);
             
             AnioAcademico anioGuardado = repositorioAnio.save(nuevoAnio);

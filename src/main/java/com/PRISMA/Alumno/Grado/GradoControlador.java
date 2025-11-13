@@ -1,5 +1,4 @@
 package com.PRISMA.Alumno.Grado;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -8,7 +7,6 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -23,6 +21,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+
 
 @RestController
 @RequestMapping("/Grado")
@@ -49,12 +48,6 @@ public class GradoControlador {
         return repositorio.findByAnioAcademico_anio(anio);
     }
 
-    @GetMapping("/grados/activos")
-    public ResponseEntity<List<Grado>> obtenerGradosDelAnioActivo() {
-        List<Grado> gradosActivos = repositorio.findGradosPorAnioActivo();
-        return ResponseEntity.ok(gradosActivos);
-    }
-
     // Método auxiliar para determinar el turno según la sección
     private String obtenerTurnoPorSeccion(String seccion) {
         if (SECCIONES_MATUTINAS.contains(seccion.toUpperCase())) {
@@ -65,7 +58,7 @@ public class GradoControlador {
         return "Matutino"; // Por defecto
     }
 
-    // Crear oferta de grados (múltiples grados con secciones y turnos automáticos)
+    //Crear oferta de grados (múltiples grados con secciones y turnos personalizados o automáticos)
     @PostMapping("/crear-oferta")
     public ResponseEntity<?> crearOferta(@RequestBody Map<String, Object> request) {
         try {
@@ -82,11 +75,35 @@ public class GradoControlador {
             // Crear cada grado con sus secciones
             for (Map<String, Object> gradoData : grados) {
                 String nombreGrado = (String) gradoData.get("nombre");
-                @SuppressWarnings("unchecked")
-                List<String> secciones = (List<String>) gradoData.get("secciones");
+                
+                // Verificar si viene el formato antiguo (secciones: [...]) o nuevo (seccion: "A", turno: "Matutino")
+                if (gradoData.containsKey("secciones")) {
+                    // Formato antiguo: { nombre: "Primero", secciones: ["A", "B", "C"] }
+                    @SuppressWarnings("unchecked")
+                    List<String> secciones = (List<String>) gradoData.get("secciones");
+                    
+                    for (String seccion : secciones) {
+                        String turno = obtenerTurnoPorSeccion(seccion);
+                        
+                        Grado nuevoGrado = new Grado();
+                        nuevoGrado.setNombre_grado(nombreGrado);
+                        nuevoGrado.setSeccion(seccion);
+                        nuevoGrado.setTurno_grado(turno);
+                        nuevoGrado.setEstadoGrado(true);
+                        nuevoGrado.setAnioAcademico(anioAcademico);
 
-                for (String seccion : secciones) {
-                    String turno = obtenerTurnoPorSeccion(seccion);
+                        Grado gradoGuardado = repositorio.save(nuevoGrado);
+                        gradosCreados.add(gradoGuardado);
+                    }
+                } else {
+                    // Formato nuevo con turno personalizado: { nombre: "Primero", seccion: "A", turno: "Matutino" }
+                    String seccion = (String) gradoData.get("seccion");
+                    String turno = (String) gradoData.get("turno");
+                    
+                    // Si no viene turno, usar el automático
+                    if (turno == null || turno.isEmpty()) {
+                        turno = obtenerTurnoPorSeccion(seccion);
+                    }
                     
                     Grado nuevoGrado = new Grado();
                     nuevoGrado.setNombre_grado(nombreGrado);
@@ -102,6 +119,7 @@ public class GradoControlador {
 
             return ResponseEntity.status(HttpStatus.CREATED).body(gradosCreados);
         } catch (Exception e) {
+            e.printStackTrace(); // Para ver el error completo en la consola del backend
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body("Error al crear la oferta: " + e.getMessage());
         }
@@ -111,12 +129,14 @@ public class GradoControlador {
     @DeleteMapping("/eliminar/{id}")
     public ResponseEntity<?> eliminarGrado(@PathVariable Integer id) {
         try {
+            // Verificar si el grado existe
             if (!repositorio.existsById(id)) {
                 Map<String, String> error = new HashMap<>();
                 error.put("error", "Grado no encontrado");
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
             }
             
+            // Eliminar el grado
             repositorio.deleteById(id);
             
             Map<String, Object> response = new HashMap<>();
@@ -132,4 +152,3 @@ public class GradoControlador {
         }
     }
 }
-
