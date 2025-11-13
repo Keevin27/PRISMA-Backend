@@ -59,7 +59,7 @@ public class GradoControlador {
         return "Matutino"; // Por defecto
     }
 
-    //Crear oferta de grados (múltiples grados con secciones y turnos personalizados o automáticos)
+    //Crear oferta de grados 
     @PostMapping("/crear-oferta")
     public ResponseEntity<?> crearOferta(@RequestBody Map<String, Object> request) {
         try {
@@ -77,9 +77,8 @@ public class GradoControlador {
             for (Map<String, Object> gradoData : grados) {
                 String nombreGrado = (String) gradoData.get("nombre");
                 
-                // Verificar si viene el formato antiguo (secciones: [...]) o nuevo (seccion: "A", turno: "Matutino")
+                // Verificar 
                 if (gradoData.containsKey("secciones")) {
-                    // Formato antiguo: { nombre: "Primero", secciones: ["A", "B", "C"] }
                     @SuppressWarnings("unchecked")
                     List<String> secciones = (List<String>) gradoData.get("secciones");
                     
@@ -97,7 +96,6 @@ public class GradoControlador {
                         gradosCreados.add(gradoGuardado);
                     }
                 } else {
-                    // Formato nuevo con turno personalizado: { nombre: "Primero", seccion: "A", turno: "Matutino" }
                     String seccion = (String) gradoData.get("seccion");
                     String turno = (String) gradoData.get("turno");
                     

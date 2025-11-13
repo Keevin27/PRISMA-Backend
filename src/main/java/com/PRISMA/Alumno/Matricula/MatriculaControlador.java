@@ -42,8 +42,6 @@ public class MatriculaControlador {
     @Autowired
     private GradoRepositorio gradoRepositorio;
 
-    // ==================== ENDPOINTS EXISTENTES ====================
-
     // Listar todas las matriculas
     @GetMapping("/")
     public List<Matricula> listarMatriculas() {
@@ -62,7 +60,7 @@ public class MatriculaControlador {
         return repositorioMatricula.buscarPorGrado(id_grado);
     }
 
-    // Matriculas por grado (nueva ruta más clara)
+    // Matriculas por grado 
     @GetMapping("/grado/{idGrado}")
     public List<Matricula> listarMatriculasPorGrado(@PathVariable int idGrado) {
         return repositorioMatricula.buscarPorGrado(idGrado);
@@ -194,11 +192,7 @@ public class MatriculaControlador {
         }
     }
 
-    // ==================== LÓGICA PRINCIPAL DEL MÓDULO ====================
-
-    /**
-     * Obtener alumnos matriculados y NO matriculados (candidatos) para un grado específico.
-     */
+    //Obtener alumnos matriculados y NO matriculados (candidatos) para un grado específico.
     @GetMapping("/alumnos-por-grado")
     public ResponseEntity<?> obtenerAlumnosPorGrado(
             @RequestParam Integer idGrado,
@@ -210,22 +204,22 @@ public class MatriculaControlador {
                 return ResponseEntity.badRequest().body(Map.of("error", "El grado no existe"));
             }
 
-            // 1. Obtener ALUMNOS MATRICULADOS (Solo los de ESE grado)
+            // Obtener ALUMNOS MATRICULADOS (Solo los de ESE grado)
             List<Matricula> matriculados = repositorioMatricula.buscarPorGrado(idGrado);
 
-            // 2. Obtener ALUMNOS NO MATRICULADOS (Candidatos)
-            // 2a. Obtener TODOS los alumnos ya matriculados en CUALQUIER grado de ESTE AÑO
+            // Obtener ALUMNOS NO MATRICULADOS (Candidatos)
+            // Obtener TODOS los alumnos ya matriculados en CUALQUIER grado de ESTE AÑO
             List<Matricula> matriculasDelAnio = repositorioMatricula.buscarPorAnio(anio);
             
-            // 2b. Crear un Set (lista rápida) de los IDs de alumnos que ya tienen matrícula este año
+            // Crear un Set (lista rápida) de los IDs de alumnos que ya tienen matrícula este año
             Set<Integer> idsAlumnosYaMatriculadosEnElAnio = matriculasDelAnio.stream()
                 .map(m -> m.getAlumno().getIdAlumno())
                 .collect(Collectors.toSet());
 
-            // 2c. Obtener TODOS los alumnos activos del sistema
+            //Obtener TODOS los alumnos activos del sistema
             List<Alumno> todosAlumnosActivos = alumnoRepositorio.buscarAlumnosActivos();
             
-            // 2d. Filtrar: un "candidato" es un alumno activo que NO esté en la lista de matriculados del año
+            //Filtrar: un "candidato" es un alumno activo que NO esté en la lista de matriculados del año
             List<Matricula> noMatriculados = new ArrayList<>();
             for (Alumno alumno : todosAlumnosActivos) {
                 if (!idsAlumnosYaMatriculadosEnElAnio.contains(alumno.getIdAlumno())) {
@@ -239,11 +233,11 @@ public class MatriculaControlador {
                 }
             }
             
-            // 3. Calcular cupo
+            //Calcular cupo
             long totalMatriculados = matriculados.size();
             long cupoDisponible = 45 - totalMatriculados;
 
-            // 4. Preparar respuesta
+            //Preparar respuesta
             Map<String, Object> respuesta = new HashMap<>();
             respuesta.put("matriculados", matriculados);
             respuesta.put("noMatriculados", noMatriculados);
@@ -260,9 +254,8 @@ public class MatriculaControlador {
         }
     }
 
-    /**
-     * Matricular múltiples alumnos a la vez
-     */
+    
+    //Matricular múltiples alumnos a la vez
     @PostMapping("/matricular-multiples")
     public ResponseEntity<?> matricularMultiplesAlumnos(@RequestBody Map<String, Object> payload) {
         Map<String, Object> respuesta = new HashMap<>();
@@ -322,7 +315,7 @@ public class MatriculaControlador {
                             continue;
                         }
                         
-                        // Caso 2: Es "Rocío" (grado es null PARA ESTE AÑO)
+                        // Caso 2: grado es null PARA ESTE AÑO
                         // Actualizamos este registro
                         matExist.setGrado(grado);
                         matExist.setEstadoMatricula("Matriculado");
@@ -331,7 +324,7 @@ public class MatriculaControlador {
                         exitosas++;
 
                     } else {
-                        // Caso 3: No tiene NINGÚN registro este año (nuevo, o promovido)
+                        // Caso 3: No tiene NINGÚN registro este año
                         // Creamos un registro nuevo
                         Matricula nuevaMatricula = new Matricula();
                         nuevaMatricula.setAlumno(alumno);
@@ -361,9 +354,7 @@ public class MatriculaControlador {
         }
     }
 
-    /**
-     * Desmatricular múltiples alumnos (de un grado específico)
-     */
+    // Desmatricular múltiples alumnos (de un grado específico)
     @DeleteMapping("/desmatricular-multiples")
     public ResponseEntity<?> desmatricularMultiplesAlumnos(@RequestBody Map<String, Object> payload) {
         Map<String, Object> respuesta = new HashMap<>();
@@ -391,7 +382,7 @@ public class MatriculaControlador {
                         .findFirst();
                     
                     if (matriculaOpt.isPresent()) {
-                        // Lógica "Rocío": Desmatricular = quitar el grado
+                        //Desmatricular = quitar el grado
                         Matricula matricula = matriculaOpt.get();
                         matricula.setGrado(null);
                         matricula.setEstadoMatricula("Disponible");
