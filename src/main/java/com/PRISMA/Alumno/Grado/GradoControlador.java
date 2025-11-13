@@ -59,7 +59,7 @@ public class GradoControlador {
         return "Matutino"; // Por defecto
     }
 
-    //Crear oferta de grados (múltiples grados con secciones y turnos automáticos)
+    //Crear oferta de grados (múltiples grados con secciones y turnos personalizados o automáticos)
     @PostMapping("/crear-oferta")
     public ResponseEntity<?> crearOferta(@RequestBody Map<String, Object> request) {
         try {
@@ -76,12 +76,35 @@ public class GradoControlador {
             // Crear cada grado con sus secciones
             for (Map<String, Object> gradoData : grados) {
                 String nombreGrado = (String) gradoData.get("nombre");
-                @SuppressWarnings("unchecked")
-                List<String> secciones = (List<String>) gradoData.get("secciones");
+                
+                // Verificar si viene el formato antiguo (secciones: [...]) o nuevo (seccion: "A", turno: "Matutino")
+                if (gradoData.containsKey("secciones")) {
+                    // Formato antiguo: { nombre: "Primero", secciones: ["A", "B", "C"] }
+                    @SuppressWarnings("unchecked")
+                    List<String> secciones = (List<String>) gradoData.get("secciones");
+                    
+                    for (String seccion : secciones) {
+                        String turno = obtenerTurnoPorSeccion(seccion);
+                        
+                        Grado nuevoGrado = new Grado();
+                        nuevoGrado.setNombre_grado(nombreGrado);
+                        nuevoGrado.setSeccion(seccion);
+                        nuevoGrado.setTurno_grado(turno);
+                        nuevoGrado.setEstadoGrado(true);
+                        nuevoGrado.setAnioAcademico(anioAcademico);
 
-                for (String seccion : secciones) {
-                    // Determinar automáticamente el turno según la sección
-                    String turno = obtenerTurnoPorSeccion(seccion);
+                        Grado gradoGuardado = repositorio.save(nuevoGrado);
+                        gradosCreados.add(gradoGuardado);
+                    }
+                } else {
+                    // Formato nuevo con turno personalizado: { nombre: "Primero", seccion: "A", turno: "Matutino" }
+                    String seccion = (String) gradoData.get("seccion");
+                    String turno = (String) gradoData.get("turno");
+                    
+                    // Si no viene turno, usar el automático
+                    if (turno == null || turno.isEmpty()) {
+                        turno = obtenerTurnoPorSeccion(seccion);
+                    }
                     
                     Grado nuevoGrado = new Grado();
                     nuevoGrado.setNombre_grado(nombreGrado);
@@ -97,6 +120,7 @@ public class GradoControlador {
 
             return ResponseEntity.status(HttpStatus.CREATED).body(gradosCreados);
         } catch (Exception e) {
+            e.printStackTrace(); // Para ver el error completo en la consola del backend
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body("Error al crear la oferta: " + e.getMessage());
         }
