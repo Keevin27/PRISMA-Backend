@@ -36,21 +36,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import org.springframework.security.core.Authentication;
 import com.PRISMA.Docente.DocenteRepositorio;
-//ALTER TABLE alumnos ADD CONSTRAINT alumnos_nie_unique UNIQUE (nie);
+
 @CrossOrigin(origins = "http://localhost:4200")
 @RestController
 @RequestMapping("/actividades")
 public class ActividadControlador {
 
-        @PostConstruct
-    public void init() {
-        System.out.println("✅ ActividadControlador INICIALIZADO");
-        System.out.println("✅ Rutas disponibles:");
-        System.out.println("   - GET  /actividades/listar");
-        System.out.println("   - POST /actividades/crear");
-        System.out.println("   - PUT  /actividades/actualizar/{id}");
-        System.out.println("   - DELETE /actividades/eliminar/{id}");
-    }
+
 
     @Autowired
     private ActividadRepositorio actividadRepositorio;
@@ -519,10 +511,5 @@ private void calcularYGuardarNotaTrimestre(Long idBloque, Integer nie, Integer n
         System.err.println("Error al calcular nota trimestre: " + e.getMessage());
     }
 }
-
-// ========================================================
-// NUEVO: Listar bloques del docente autenticado
-// GET /actividades/mis-bloques
-// ========================================================
 
 }
