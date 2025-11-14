@@ -27,7 +27,7 @@ public class GradoControlador {
 
     @GetMapping("/grados/{anio}")
     public List<Grado> obtenerGradosPorAnio(@PathVariable int anio) {
-        return repositorio.findByAnioAcademico_anio(anio);
+        return repositorio.buscarGradosPorAnioAcademico(anio);
     }
     
 }

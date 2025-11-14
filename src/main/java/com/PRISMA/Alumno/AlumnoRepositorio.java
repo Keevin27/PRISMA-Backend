@@ -14,8 +14,8 @@ import com.PRISMA.Entity.Alumno;
 public interface AlumnoRepositorio extends JpaRepository<Alumno, Integer> {
 
     // Buscar alumnos por grado (ordenados por apellido)
-    @Query("SELECT a FROM Alumno a JOIN Matricula m ON m.alumno.idAlumno = a.idAlumno WHERE m.grado.id_grado = :id_grado ORDER BY a.apellido_alumno")
-    List<Alumno> buscarPorGrado(@Param("id_grado") Integer id_grado);
+    @Query("SELECT m.alumno FROM Matricula m WHERE m.grado.id_grado = :id_grado ORDER BY m.alumno.apellido_alumno")
+List<Alumno> buscarPorGrado(@Param("id_grado") Integer id_grado);
 
     // Buscar alumno por NIE
     @Query("SELECT a FROM Alumno a WHERE a.nie = :nie")

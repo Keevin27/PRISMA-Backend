@@ -35,8 +35,8 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
                 // .requestMatchers("/auth/**").permitAll()
-                // .anyRequest().authenticated()
-                .anyRequest().permitAll()
+                // .anyRequest().authenticated() DESCOMENTAR ESTAS DOS LINEAS PARA ACTIVAR SEGURIDAD
+                .anyRequest().permitAll() // COMENTAR ESTA LINEA PARA ACTIVAR SEGURIDAD
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
