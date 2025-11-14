@@ -39,4 +39,16 @@ public class Dia {
         this.nombre_dia = nombre_dia;
     }
     
+    public Long getId_dia() {
+        return id_dia;
+    }
+    public void setId_dia(Long id_dia) {
+        this.id_dia = id_dia;
+    }
+    public String getNombre_dia() {
+        return nombre_dia;
+    }
+    public void setNombre_dia(String nombre_dia) {
+        this.nombre_dia = nombre_dia;
+    }
 }

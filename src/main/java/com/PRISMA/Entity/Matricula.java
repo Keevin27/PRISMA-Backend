@@ -67,5 +67,13 @@ public class Matricula {
         this.alumno = alumno;
     }
 
-    
+    public int getIdMatricula() {
+        return idMatricula;
+    }
+
+    public void setIdMatricula(int idMatricula) {
+        this.idMatricula = idMatricula;
+    }
+
+     
 }

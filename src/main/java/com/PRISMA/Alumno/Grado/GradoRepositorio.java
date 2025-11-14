@@ -12,7 +12,8 @@ import com.PRISMA.Entity.Grado;
 @Repository
 public interface GradoRepositorio extends JpaRepository<Grado, Integer> {
 
-    List<Grado> findByAnioAcademico_anio(Integer anio);
+    @Query("SELECT g FROM Grado g WHERE  g.anioAcademico.anio = :anio")
+    List<Grado> buscarGradosPorAnioAcademico(@Param("anio") Integer anio);
 
     @Query("SELECT g FROM Grado g WHERE g.anioAcademico.anio_activo = true")
     List<Grado> findGradosPorAnioActivo();
