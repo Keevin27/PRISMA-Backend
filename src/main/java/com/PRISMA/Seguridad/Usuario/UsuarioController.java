@@ -2,9 +2,12 @@ package com.PRISMA.Seguridad.Usuario;
 
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +35,9 @@ import com.PRISMA.Seguridad.RolRepositorio;
 public class UsuarioController {
     @Autowired
     private UsuarioService usuarioService;
+
+    @Autowired
+    private EmailService emailService;
 
     @Autowired
     private RolRepositorio rolRepository;
@@ -100,4 +106,54 @@ public class UsuarioController {
 
         return ResponseEntity.ok(actualizado);
     }
+
+    @PostMapping("/recuperar")
+    public ResponseEntity<Map<String, String>> recuperarPassword(@RequestBody Map<String, String> request) {
+        String correo = request.get("correo");
+
+        Usuario usuario = usuarioService.obtenerPorCorreo(correo)
+                .orElseThrow(() -> new RuntimeException("Correo no registrado"));
+
+        // Generar contraseña temporal
+        String nuevaPassword = UUID.randomUUID().toString().substring(0, 8);
+
+        usuario.setPasswordUsuario(encoder.encode(nuevaPassword));
+        usuarioService.guardar(usuario);
+
+        // Enviar correo
+        emailService.enviarCorreo(
+                correo,
+                "Recuperación de contraseña",
+                "Tu nueva contraseña temporal es: " + nuevaPassword +
+                        "\nPor favor cámbiala después de iniciar sesión."
+        );
+
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Se envió un correo con la nueva contraseña");
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/{id}/password")
+    public ResponseEntity<Usuario> actualizarPassword(@PathVariable Long id, @RequestBody Map<String, String> request) {
+        String nuevaPassword = request.get("passwordUsuario");
+        if (nuevaPassword == null || nuevaPassword.trim().isEmpty()) {
+            throw new RuntimeException("La nueva contraseña no puede estar vacía");
+        }
+
+        Usuario existente = usuarioService.obtenerPorId(id)
+            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        existente.setPasswordUsuario(encoder.encode(nuevaPassword));
+        Usuario actualizado = usuarioService.guardar(existente);
+
+        return ResponseEntity.ok(actualizado);
+    }
+
+    @GetMapping("/correo/{correo}")
+    public ResponseEntity<Usuario> obtenerPorCorreo(@PathVariable String correo) {
+        Usuario usuario = usuarioService.obtenerPorCorreo(correo)
+            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        return ResponseEntity.ok(usuario);
+    }
+
 }

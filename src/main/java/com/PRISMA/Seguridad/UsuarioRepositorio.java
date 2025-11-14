@@ -11,3 +11,4 @@ import com.PRISMA.Entity.Usuario;
 public interface UsuarioRepositorio extends JpaRepository<Usuario, Long> {
     Optional<Usuario> findByCorreoUsuario(String correoUsuario);
 }
+
