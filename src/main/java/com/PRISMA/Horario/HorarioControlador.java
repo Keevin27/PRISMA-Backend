@@ -12,11 +12,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.PRISMA.Bloque.BloqueRepositorio;
-import com.PRISMA.Dia.DiaRepositorio;
 import com.PRISMA.Entity.AsignacionHorario;
 import com.PRISMA.Entity.Bloque;
 import com.PRISMA.Entity.Horario;
 import com.PRISMA.Entity.Materia;
+import com.PRISMA.SemanaDia.DiaRepositorio;
 
 @RestController
 @RequestMapping("/Horarios/")
