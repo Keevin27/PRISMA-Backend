@@ -25,5 +25,15 @@ public interface BloqueRepositorio extends JpaRepository<Bloque, Long> {
     @Query("SELECT b FROM Bloque b WHERE b.docente.duiDocente = :duiDocente")
     List<Bloque> findByDuiDocente(@Param("duiDocente") String duiDocente);
     
+
+    // Metodos
+    @Query("SELECT b FROM Bloque b WHERE b.anioAcademico = :anio")
+    List<Bloque> findByAnioAcademico(@Param("anio") Integer anio);
+    
+    @Query("SELECT b FROM Bloque b WHERE b.docente.duiDocente = :dui AND b.anioAcademico = :anio")
+    List<Bloque> findByDuiDocenteAndAnioAcademico(
+        @Param("dui") String dui, 
+        @Param("anio") Integer anio
+    );
 }
 

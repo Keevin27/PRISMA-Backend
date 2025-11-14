@@ -2,6 +2,7 @@ package com.PRISMA.AnioAcademico;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -88,6 +89,33 @@ public class AnioAcademicoControlador {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body("Año académico no encontrado");
+        }
+    }
+
+//Obtener año activo
+    @GetMapping("/activo")
+    public ResponseEntity<?> obtenerAnioActivo() {
+        try {
+            Optional<AnioAcademico> anioActivo = repositorioAnio.findByAnioActivoTrue();
+            if (anioActivo.isPresent()) {
+                return ResponseEntity.ok(anioActivo.get());
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("No hay año académico activo");
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Error al obtener año activo: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/todos")
+    public ResponseEntity<List<AnioAcademico>> obtenerTodos() {
+        try {
+            List<AnioAcademico> anios = repositorioAnio.findAll();
+            return ResponseEntity.ok(anios);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 }

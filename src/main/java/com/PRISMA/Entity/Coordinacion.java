@@ -11,18 +11,26 @@ public class Coordinacion {
     @Column(name = "id_coordinacion")
     private Long idCoordinacion;
 
-
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_grado", referencedColumnName = "id_grado", unique = true)
+    // Relación OneToOne: Un grado solo puede tener un coordinador
+    @OneToOne
+    @JoinColumn(name = "id_grado", referencedColumnName = "id_grado", unique = true, nullable = false)
     private Grado grado;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "dui_docente", referencedColumnName = "duiDocente")
+    // Relación ManyToOne: Un docente puede ser coordinador de varios grados (en diferentes años académicos)
+    @ManyToOne
+    @JoinColumn(name = "dui_docente", referencedColumnName = "duiDocente", nullable = false)
     private Docente docente;
 
+    // Constructores
     public Coordinacion() {
     }
 
+    public Coordinacion(Grado grado, Docente docente) {
+        this.grado = grado;
+        this.docente = docente;
+    }
+
+    // Getters y Setters
     public Long getIdCoordinacion() {
         return idCoordinacion;
     }
@@ -45,5 +53,12 @@ public class Coordinacion {
 
     public void setDocente(Docente docente) {
         this.docente = docente;
+    }
+
+    @Override
+    public String toString() {
+        return "Coordinacion [idCoordinacion=" + idCoordinacion + 
+               ", grado=" + (grado != null ? grado.getNombre_grado() + " " + grado.getSeccion() : "null") + 
+               ", docente=" + (docente != null ? docente.getNombre_Docente() + " " + docente.getApellido_Docente() : "null") + "]";
     }
 }
