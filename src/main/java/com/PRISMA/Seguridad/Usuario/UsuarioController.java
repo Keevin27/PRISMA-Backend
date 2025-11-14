@@ -132,4 +132,28 @@ public class UsuarioController {
         response.put("message", "Se envió un correo con la nueva contraseña");
         return ResponseEntity.ok(response);
     }
+
+    @PutMapping("/{id}/password")
+    public ResponseEntity<Usuario> actualizarPassword(@PathVariable Long id, @RequestBody Map<String, String> request) {
+        String nuevaPassword = request.get("passwordUsuario");
+        if (nuevaPassword == null || nuevaPassword.trim().isEmpty()) {
+            throw new RuntimeException("La nueva contraseña no puede estar vacía");
+        }
+
+        Usuario existente = usuarioService.obtenerPorId(id)
+            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        existente.setPasswordUsuario(encoder.encode(nuevaPassword));
+        Usuario actualizado = usuarioService.guardar(existente);
+
+        return ResponseEntity.ok(actualizado);
+    }
+
+    @GetMapping("/correo/{correo}")
+    public ResponseEntity<Usuario> obtenerPorCorreo(@PathVariable String correo) {
+        Usuario usuario = usuarioService.obtenerPorCorreo(correo)
+            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        return ResponseEntity.ok(usuario);
+    }
+
 }
