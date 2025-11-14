@@ -16,6 +16,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.PRISMA.Alumno.Grado.GradoRepositorio;
@@ -48,12 +49,7 @@ public class BloqueControlador {
     @Autowired
     private GradoRepositorio gradoRepositorio;
 
-    //Para modulo de notas
-    @GetMapping("/bloques")
-    public ResponseEntity<List<Bloque>> obtenerTodosBloques() {
-        List<Bloque> bloques = bloqueRepositorio.findAll();
-        return ResponseEntity.ok(bloques);
-}
+
     
     @PostMapping("/bloques")
     public ResponseEntity<List<Bloque>> guardarBloques(@RequestBody Map <String,Object>datos) {
@@ -130,36 +126,99 @@ public class BloqueControlador {
     }
 
 
- //Notas
+//Para modulo de notas
+@GetMapping("/bloques")
+public ResponseEntity<List<Map<String, Object>>> obtenerTodosBloques(
+        @RequestParam(required = false) Integer anioAcademico) {
+    
+    List<Bloque> bloques;
+    
+    // FILTRAR POR AÑO SI SE PROPORCIONA
+    if (anioAcademico != null) {
+        bloques = bloqueRepositorio.findByAnioAcademico(anioAcademico);
+    } else {
+        bloques = bloqueRepositorio.findAll();
+    }
+    
+    // Formatear respuesta con la estructura completa
+    List<Map<String, Object>> resultado = bloques.stream().map(b -> {
+        Map<String, Object> datos = new HashMap<>();
+        datos.put("id_bloque", b.getId_bloque());
+        datos.put("anioAcademico", b.getAnioAcademico());
+        
+        // Datos del grado
+        if (b.getGrado() != null) {
+            Map<String, Object> grado = new HashMap<>();
+            grado.put("id_grado", b.getGrado().getId_grado());
+            grado.put("nombre_grado", b.getGrado().getNombre_grado());
+            grado.put("seccion", b.getGrado().getSeccion());
+            datos.put("grado", grado);
+        }
+        
+        // Datos de la materia
+        if (b.getMateria() != null) {
+            Map<String, Object> materia = new HashMap<>();
+            materia.put("codigo_materia", b.getMateria().getCodigo_materia());
+            materia.put("nombre_materia", b.getMateria().getNombre_materia());
+            materia.put("tipo_materia", b.getMateria().getTipo_materia());
+            datos.put("materia", materia);
+        }
+        
+        // Datos del docente
+        if (b.getDocente() != null) {
+            Map<String, Object> docente = new HashMap<>();
+            docente.put("duiDocente", b.getDocente().getDuiDocente());
+            docente.put("nombre_Docente", b.getDocente().getNombre_Docente());
+            docente.put("apellido_Docente", b.getDocente().getApellido_Docente());
+            docente.put("nombreCompleto", b.getDocente().getNombre_Docente() + " " + b.getDocente().getApellido_Docente());
+            datos.put("docente", docente);
+        }
+        
+        return datos;
+    }).collect(Collectors.toList());
+    
+    return ResponseEntity.ok(resultado);
+}
+
+//Notas
 @GetMapping("/mis-bloques")
-public ResponseEntity<List<Map<String, Object>>> obtenerMisBloquesDocente() {
+public ResponseEntity<List<Map<String, Object>>> obtenerMisBloquesDocente(
+        @RequestParam(required = false) Integer anioAcademico) {
     try {
         // Obtener el correo del usuario autenticado desde el SecurityContext
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String correoDocente = authentication.getName();
         
-        System.out.println(" Obteniendo bloques para docente: " + correoDocente);
+        System.out.println("Obteniendo bloques para docente: " + correoDocente);
         
         // Buscar el docente por correo
         Optional<Docente> docenteOpt = docenteRepositorio.findByCorreo(correoDocente);
         
         if (!docenteOpt.isPresent()) {
-            System.out.println(" Docente no encontrado con correo: " + correoDocente);
-            return ResponseEntity.ok(new ArrayList<>());
+            System.out.println("Docente no encontrado con correo: " + correoDocente);
+            return ResponseEntity.ok(Collections.emptyList());
         }
         
         Docente docente = docenteOpt.get();
-        System.out.println(" Docente encontrado: " + docente.getNombre_Docente() + " " + docente.getApellido_Docente());
+        System.out.println("Docente encontrado: " + docente.getNombre_Docente() + " " + docente.getApellido_Docente());
         
-        // Obtener bloques del docente
-        List<Bloque> bloques = bloqueRepositorio.findByDuiDocente(docente.getDuiDocente());
+        // OBTENER BLOQUES FILTRANDO POR AÑO SI SE PROPORCIONA
+        List<Bloque> bloques;
+        if (anioAcademico != null) {
+            System.out.println("Filtrando por año académico: " + anioAcademico);
+            bloques = bloqueRepositorio.findByDuiDocenteAndAnioAcademico(
+                docente.getDuiDocente(), anioAcademico);
+        } else {
+            System.out.println("Obteniendo todos los bloques del docente (sin filtro de año)");
+            bloques = bloqueRepositorio.findByDuiDocente(docente.getDuiDocente());
+        }
         
-        System.out.println(" Bloques encontrados: " + bloques.size());
+        System.out.println("Bloques encontrados: " + bloques.size());
         
-        //  Formatear respuesta con la MISMA estructura que obtenerTodosBloques()
+        // Formatear respuesta con la MISMA estructura que obtenerTodosBloques()
         List<Map<String, Object>> resultado = bloques.stream().map(b -> {
             Map<String, Object> datos = new HashMap<>();
-            datos.put("id_bloque", b.getId_bloque()); //  Cambié de "idBloque" a "id_bloque"
+            datos.put("id_bloque", b.getId_bloque());
             datos.put("anioAcademico", b.getAnioAcademico());
             
             // Datos del grado como objeto
@@ -168,7 +227,7 @@ public ResponseEntity<List<Map<String, Object>>> obtenerMisBloquesDocente() {
                 grado.put("id_grado", b.getGrado().getId_grado());
                 grado.put("nombre_grado", b.getGrado().getNombre_grado());
                 grado.put("seccion", b.getGrado().getSeccion());
-                datos.put("grado", grado); //  Ahora es un objeto
+                datos.put("grado", grado);
             }
             
             // Datos de la materia como objeto
@@ -177,10 +236,10 @@ public ResponseEntity<List<Map<String, Object>>> obtenerMisBloquesDocente() {
                 materia.put("codigo_materia", b.getMateria().getCodigo_materia());
                 materia.put("nombre_materia", b.getMateria().getNombre_materia());
                 materia.put("tipo_materia", b.getMateria().getTipo_materia());
-                datos.put("materia", materia); //  Ahora es un objeto
+                datos.put("materia", materia);
             }
             
-            // Datos del docente 
+            // Datos del docente (opcional, por si lo necesitas)
             if (b.getDocente() != null) {
                 Map<String, Object> docenteData = new HashMap<>();
                 docenteData.put("duiDocente", b.getDocente().getDuiDocente());
@@ -193,16 +252,15 @@ public ResponseEntity<List<Map<String, Object>>> obtenerMisBloquesDocente() {
             return datos;
         }).collect(Collectors.toList());
         
-        System.out.println(" Bloques formateados: " + resultado.size());
+        System.out.println("Bloques formateados: " + resultado.size());
         
         return ResponseEntity.ok(resultado);
         
     } catch (Exception e) {
-        System.out.println(" Error al obtener bloques del docente: " + e.getMessage());
+        System.out.println("Error al obtener bloques del docente: " + e.getMessage());
         e.printStackTrace();
-        return ResponseEntity.ok(new ArrayList<>());
+        return ResponseEntity.ok(Collections.emptyList());
     }
 }
-
 
 }

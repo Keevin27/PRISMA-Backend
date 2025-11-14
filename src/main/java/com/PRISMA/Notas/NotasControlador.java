@@ -269,10 +269,11 @@ public class NotasControlador {
 // Reemplaza el método existente en NotasControlador.java
 // ========================================================
 
-@GetMapping("/reporte-anual/{nie}")
+@GetMapping("/reporte-anual/{nie}/{idGrado}/{anio}")
 public ResponseEntity<Map<String, Object>> obtenerReporteAnual(
         @PathVariable Integer nie,
-        @RequestParam Integer idGrado) {
+        @PathVariable Integer idGrado,
+        @PathVariable Integer anio) {
     
     Map<String, Object> respuesta = new HashMap<>();
     
