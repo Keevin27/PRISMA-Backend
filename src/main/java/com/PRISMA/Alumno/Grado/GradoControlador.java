@@ -43,11 +43,6 @@ public class GradoControlador {
         return repositorio.findAll();
     }
 
-@GetMapping("/grados/activos")
-public List<Grado> obtenerGradosActivos() {
-    return repositorio.findGradosPorAnioActivo();
-}
-
     @GetMapping("/grados/{anio}")
     public List<Grado> obtenerGradosPorAnio(@PathVariable int anio) {
         return repositorio.findByAnioAcademico_anio(anio);
