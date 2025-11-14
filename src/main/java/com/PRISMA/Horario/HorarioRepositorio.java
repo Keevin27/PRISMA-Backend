@@ -1,5 +1,9 @@
 package com.PRISMA.Horario;
 
-public class HorarioRepositorio {
+import org.springframework.data.jpa.repository.JpaRepository;
 
+import com.PRISMA.Entity.Horario;
+
+public interface HorarioRepositorio extends JpaRepository<Horario, Long> {
+    
 }
