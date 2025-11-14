@@ -1,6 +1,5 @@
 package com.PRISMA.Asistencia;
 
-import java.sql.Date;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -17,9 +16,6 @@ import com.PRISMA.Entity.AsistenciaAlumno;
 @RequestMapping("/AsisAlum/")
 @CrossOrigin(origins = "http://localhost:4200/")
 public class AsistenciaControlador {
-
-    @Autowired
-    private AsistenciaServicio asistenciaServicio;
 
     @Autowired
     private AsistenciaRepositorio repositorio;

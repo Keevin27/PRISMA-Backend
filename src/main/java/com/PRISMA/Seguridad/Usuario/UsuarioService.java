@@ -7,16 +7,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.PRISMA.Entity.Usuario;
-import com.PRISMA.Seguridad.RolRepositorio;
 import com.PRISMA.Seguridad.UsuarioRepositorio;
 
 @Service
 public class UsuarioService {
     @Autowired
     private UsuarioRepositorio usuarioRepository;
-
-    @Autowired
-    private RolRepositorio rolRepository;
 
     public List<Usuario> obtenerTodos() {
         return usuarioRepository.findAll();

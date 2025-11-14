@@ -9,7 +9,6 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,17 +24,11 @@ import com.PRISMA.Bloque.BloqueRepositorio;
 import com.PRISMA.Entity.Actividad;
 import com.PRISMA.Entity.Alumno;
 import com.PRISMA.Entity.Bloque;
-import com.PRISMA.Entity.Docente;
 import com.PRISMA.Entity.NotaActividad;
 import com.PRISMA.Entity.NotaTrimestre;
 import com.PRISMA.Entity.Trimestre;
 
-import jakarta.annotation.PostConstruct;
-
 import org.springframework.web.bind.annotation.RestController;
-
-import org.springframework.security.core.Authentication;
-import com.PRISMA.Docente.DocenteRepositorio;
 
 @CrossOrigin(origins = "http://localhost:4200")
 @RestController
@@ -46,9 +39,6 @@ public class ActividadControlador {
 
     @Autowired
     private ActividadRepositorio actividadRepositorio;
-
-    @Autowired
-private DocenteRepositorio docenteRepositorio;
     
     @Autowired
     private BloqueRepositorio bloqueRepositorio;

@@ -21,9 +21,7 @@ import com.PRISMA.Entity.Actividad;
 import com.PRISMA.Entity.Alumno;
 import com.PRISMA.Entity.Bloque;
 import com.PRISMA.Entity.NotaActividad;
-import com.PRISMA.Entity.NotaTrimestre;
 import com.PRISMA.Entity.Trimestre;
-import com.PRISMA.Entity.NotaMateria;
 
 @RestController
 @RequestMapping("/notas/")
@@ -41,12 +39,6 @@ public class NotasControlador {
     
     @Autowired
     private NotaActividadRepositorio notaActividadRepositorio;
-    
-    @Autowired
-    private NotaTrimestreRepositorio notaTrimestreRepositorio;
-    
-    @Autowired
-    private NotaMateriaRepositorio notaMateriaRepositorio;
     
     @Autowired
     private TrimestreRepositorio trimestreRepositorio;
