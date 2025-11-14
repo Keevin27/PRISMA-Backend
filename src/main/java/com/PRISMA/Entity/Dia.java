@@ -35,20 +35,4 @@ public class Dia {
     public void setNombre_dia(String nombre_dia) {
         this.nombre_dia = nombre_dia;
     }
-    public Long getId_Dia() {
-        return id_dia;
-    }
-
-    public void setId_Dia(Long id_dia) {
-        this.id_dia = id_dia;
-    }
-
-    public String getNombre_Dia() {
-        return nombre_dia;
-    }
-
-    public void setNombre_Dia(String nombre_dia) {
-        this.nombre_dia = nombre_dia;
-    }
-    
 }

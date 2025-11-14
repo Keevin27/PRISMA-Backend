@@ -50,6 +50,8 @@ public class AnioAcademico {
     }
     public void setAnio_cerrado(boolean anio_cerrado) {
         this.anio_cerrado = anio_cerrado;
-    } 
+    }
+
+    
 
 }
