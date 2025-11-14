@@ -150,4 +150,11 @@ public class GradoControlador {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
+
+    @GetMapping("/grados/activos")
+    public ResponseEntity<List<Grado>> obtenerGradosDelAnioActivo() {
+        List<Grado> gradosActivos = repositorio.findGradosPorAnioActivo();
+        return ResponseEntity.ok(gradosActivos);
+    }
+    
 }
