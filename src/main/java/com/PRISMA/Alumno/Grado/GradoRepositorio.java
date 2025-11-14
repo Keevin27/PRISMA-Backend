@@ -15,4 +15,20 @@ public interface GradoRepositorio extends JpaRepository<Grado, Integer> {
     @Query("SELECT g FROM Grado g WHERE  g.anioAcademico.anio = :anio")
     List<Grado> buscarGradosPorAnioAcademico(@Param("anio") Integer anio);
 
+    @Query("SELECT g FROM Grado g WHERE g.anioAcademico.anio_activo = true")
+    List<Grado> findGradosPorAnioActivo();
+
+    @Query("""
+        SELECT g
+        FROM Grado g
+        WHERE g.anioAcademico.anio_activo = true
+        AND g.id_grado NOT IN (
+            SELECT b.grado.id_grado
+            FROM Bloque b
+            WHERE b.materia.codigo_materia = :codigo_materia
+        )
+    """)
+    List<Grado> findGradosDisponiblesPorMateria(@Param("codigo_materia") String codigo_materia);
+
+
 }
