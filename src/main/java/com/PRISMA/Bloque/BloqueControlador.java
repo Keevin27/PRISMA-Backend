@@ -12,6 +12,8 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -45,6 +47,13 @@ public class BloqueControlador {
     private DocenteRepositorio docenteRepositorio;
     @Autowired
     private GradoRepositorio gradoRepositorio;
+
+    //Para modulo de notas
+    @GetMapping("/bloques")
+    public ResponseEntity<List<Bloque>> obtenerTodosBloques() {
+        List<Bloque> bloques = bloqueRepositorio.findAll();
+        return ResponseEntity.ok(bloques);
+}
     
     @PostMapping("/bloques")
     public ResponseEntity<List<Bloque>> guardarBloques(@RequestBody Map <String,Object>datos) {
@@ -119,6 +128,81 @@ public class BloqueControlador {
         List<Grado> grados = gradoRepositorio.findGradosDisponiblesPorMateria(codigoMateria);
         return ResponseEntity.ok(grados);
     }
+
+
+ //Notas
+@GetMapping("/mis-bloques")
+public ResponseEntity<List<Map<String, Object>>> obtenerMisBloquesDocente() {
+    try {
+        // Obtener el correo del usuario autenticado desde el SecurityContext
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String correoDocente = authentication.getName();
+        
+        System.out.println(" Obteniendo bloques para docente: " + correoDocente);
+        
+        // Buscar el docente por correo
+        Optional<Docente> docenteOpt = docenteRepositorio.findByCorreo(correoDocente);
+        
+        if (!docenteOpt.isPresent()) {
+            System.out.println(" Docente no encontrado con correo: " + correoDocente);
+            return ResponseEntity.ok(new ArrayList<>());
+        }
+        
+        Docente docente = docenteOpt.get();
+        System.out.println(" Docente encontrado: " + docente.getNombre_Docente() + " " + docente.getApellido_Docente());
+        
+        // Obtener bloques del docente
+        List<Bloque> bloques = bloqueRepositorio.findByDuiDocente(docente.getDuiDocente());
+        
+        System.out.println(" Bloques encontrados: " + bloques.size());
+        
+        //  Formatear respuesta con la MISMA estructura que obtenerTodosBloques()
+        List<Map<String, Object>> resultado = bloques.stream().map(b -> {
+            Map<String, Object> datos = new HashMap<>();
+            datos.put("id_bloque", b.getId_bloque()); //  Cambié de "idBloque" a "id_bloque"
+            datos.put("anioAcademico", b.getAnioAcademico());
+            
+            // Datos del grado como objeto
+            if (b.getGrado() != null) {
+                Map<String, Object> grado = new HashMap<>();
+                grado.put("id_grado", b.getGrado().getId_grado());
+                grado.put("nombre_grado", b.getGrado().getNombre_grado());
+                grado.put("seccion", b.getGrado().getSeccion());
+                datos.put("grado", grado); //  Ahora es un objeto
+            }
+            
+            // Datos de la materia como objeto
+            if (b.getMateria() != null) {
+                Map<String, Object> materia = new HashMap<>();
+                materia.put("codigo_materia", b.getMateria().getCodigo_materia());
+                materia.put("nombre_materia", b.getMateria().getNombre_materia());
+                materia.put("tipo_materia", b.getMateria().getTipo_materia());
+                datos.put("materia", materia); //  Ahora es un objeto
+            }
+            
+            // Datos del docente 
+            if (b.getDocente() != null) {
+                Map<String, Object> docenteData = new HashMap<>();
+                docenteData.put("duiDocente", b.getDocente().getDuiDocente());
+                docenteData.put("nombre_Docente", b.getDocente().getNombre_Docente());
+                docenteData.put("apellido_Docente", b.getDocente().getApellido_Docente());
+                docenteData.put("nombreCompleto", b.getDocente().getNombre_Docente() + " " + b.getDocente().getApellido_Docente());
+                datos.put("docente", docenteData);
+            }
+            
+            return datos;
+        }).collect(Collectors.toList());
+        
+        System.out.println(" Bloques formateados: " + resultado.size());
+        
+        return ResponseEntity.ok(resultado);
+        
+    } catch (Exception e) {
+        System.out.println(" Error al obtener bloques del docente: " + e.getMessage());
+        e.printStackTrace();
+        return ResponseEntity.ok(new ArrayList<>());
+    }
+}
 
 
 }
