@@ -66,7 +66,7 @@ public class CoordinacionServicio {
         List<Grado> todosGrados;
         
         if (anioAcademico != null) {
-            todosGrados = gradoRepositorio.findByAnioAcademico_anio(anioAcademico);
+            todosGrados = gradoRepositorio.buscarGradosPorAnioAcademico(anioAcademico);
         } else {
             todosGrados = gradoRepositorio.findAll();
         }
