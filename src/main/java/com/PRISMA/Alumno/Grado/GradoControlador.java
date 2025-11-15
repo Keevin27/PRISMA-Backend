@@ -156,5 +156,10 @@ public class GradoControlador {
         List<Grado> gradosActivos = repositorio.findGradosPorAnioActivo();
         return ResponseEntity.ok(gradosActivos);
     }
+    @GetMapping("/{id}")
+    public Grado obtenerGradoPorId(@PathVariable int id) {
+        return repositorio.findById(id)
+            .orElseThrow(() -> new RuntimeException("Grado no encontrado"));
+    }
     
 }

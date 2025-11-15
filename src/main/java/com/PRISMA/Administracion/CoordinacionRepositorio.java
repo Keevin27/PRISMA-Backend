@@ -36,4 +36,11 @@ public interface CoordinacionRepositorio extends JpaRepository<Coordinacion, Lon
     // Buscar coordinación específica por docente y grado
     @Query("SELECT c FROM Coordinacion c WHERE c.docente.duiDocente = :duiDocente AND c.grado.id_grado = :idGrado")
     Optional<Coordinacion> findByDocenteAndGrado(@Param("duiDocente") String duiDocente, @Param("idGrado") Integer idGrado);
+
+    @Query("SELECT c FROM Coordinacion c " +
+           "JOIN FETCH c.grado " +
+           "JOIN FETCH c.docente " +
+           "ORDER BY c.grado.nombre_grado")
+    List<Coordinacion> findAllWithGradoAndDocente();
+    
 }

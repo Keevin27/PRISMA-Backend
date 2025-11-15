@@ -9,6 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.PRISMA.Entity.Coordinacion;
+
 @RestController
 @RequestMapping("/coordinacion")
 @CrossOrigin(origins = "http://localhost:4200")
@@ -16,6 +18,8 @@ public class CoordinacionControlador {
 
     @Autowired
     private CoordinacionServicio coordinacionServicio;
+    @Autowired
+    private CoordinacionRepositorio coordinacionRepositorio;
 
     @GetMapping("/asignaciones")
     public ResponseEntity<List<Map<String, Object>>> listarAsignaciones(
@@ -28,6 +32,7 @@ public class CoordinacionControlador {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
+
     @GetMapping("/docentes-disponibles")
     public ResponseEntity<List<Map<String, Object>>> obtenerDocentesDisponibles() {
         try {
@@ -38,6 +43,7 @@ public class CoordinacionControlador {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
+
     @GetMapping("/grados-disponibles")
     public ResponseEntity<List<Map<String, Object>>> obtenerGradosDisponibles(
             @RequestParam(required = false) Integer anioAcademico) {
@@ -49,21 +55,22 @@ public class CoordinacionControlador {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
-  @PostMapping("/asignar")
+
+    @PostMapping("/asignar")
     public ResponseEntity<Map<String, Object>> asignarCoordinador(@RequestBody Map<String, Object> datos) {
         Map<String, Object> respuesta = new HashMap<>();
-        
+
         try {
             String duiDocente = (String) datos.get("duiDocente");
             Integer idGrado = Integer.valueOf(datos.get("idGrado").toString());
-            
+
             Map<String, Object> coordinacion = coordinacionServicio.asignarCoordinador(duiDocente, idGrado);
-            
+
             respuesta.put("mensaje", "Coordinador asignado exitosamente");
             respuesta.putAll(coordinacion);
-            
+
             return ResponseEntity.status(HttpStatus.CREATED).body(respuesta);
-            
+
         } catch (RuntimeException e) {
             respuesta.put("error", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(respuesta);
@@ -78,18 +85,18 @@ public class CoordinacionControlador {
     public ResponseEntity<Map<String, Object>> actualizarCoordinador(
             @PathVariable Long id,
             @RequestBody Map<String, Object> datos) {
-        
+
         Map<String, Object> respuesta = new HashMap<>();
-        
+
         try {
             String duiDocente = (String) datos.get("duiDocente");
             Map<String, Object> coordinacion = coordinacionServicio.actualizarCoordinador(id, duiDocente);
-            
+
             respuesta.put("mensaje", "Coordinador actualizado exitosamente");
             respuesta.putAll(coordinacion);
-            
+
             return ResponseEntity.ok(respuesta);
-            
+
         } catch (RuntimeException e) {
             respuesta.put("error", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(respuesta);
@@ -103,15 +110,15 @@ public class CoordinacionControlador {
     @DeleteMapping("/eliminar/{id}")
     public ResponseEntity<Map<String, Object>> eliminarCoordinador(@PathVariable Long id) {
         Map<String, Object> respuesta = new HashMap<>();
-        
+
         try {
             coordinacionServicio.eliminarCoordinador(id);
-            
+
             respuesta.put("mensaje", "Asignación eliminada exitosamente");
             respuesta.put("idCoordinacion", id);
-            
+
             return ResponseEntity.ok(respuesta);
-            
+
         } catch (RuntimeException e) {
             respuesta.put("error", e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(respuesta);
@@ -127,7 +134,7 @@ public class CoordinacionControlador {
         try {
             Map<String, Object> detalle = coordinacionServicio.obtenerDetalle(id);
             return ResponseEntity.ok(detalle);
-            
+
         } catch (RuntimeException e) {
             Map<String, Object> error = new HashMap<>();
             error.put("error", e.getMessage());
@@ -144,13 +151,13 @@ public class CoordinacionControlador {
     public ResponseEntity<Map<String, Object>> verificarCoordinador(@PathVariable Integer idGrado) {
         try {
             boolean tieneCoordinador = coordinacionServicio.tieneCoordinador(idGrado);
-            
+
             Map<String, Object> respuesta = new HashMap<>();
             respuesta.put("idGrado", idGrado);
             respuesta.put("tieneCoordinador", tieneCoordinador);
-            
+
             return ResponseEntity.ok(respuesta);
-            
+
         } catch (Exception e) {
             e.printStackTrace();
             Map<String, Object> error = new HashMap<>();
@@ -165,10 +172,20 @@ public class CoordinacionControlador {
         try {
             List<Map<String, Object>> coordinaciones = coordinacionServicio.obtenerCoordinacionesPorDocente(duiDocente);
             return ResponseEntity.ok(coordinaciones);
-            
+
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
+    }
+
+    @GetMapping("/")
+    public List<Coordinacion> obtenerCoordinaciones() {
+        return coordinacionRepositorio.findAllWithGradoAndDocente();
+    }
+    @GetMapping("/grado/{idGrado}")
+    public Coordinacion obtenerPorGrado(@PathVariable int idGrado) {
+        return coordinacionRepositorio.findByGradoId(idGrado)
+            .orElse(null);
     }
 }

@@ -76,4 +76,11 @@ public class MenuControlador {
             .orElseThrow(() -> new ResourceNotFoundException("No existe el menu con ID: " + id));
         return ResponseEntity.ok(menu);
     } 
+    @GetMapping("/semana/{idSemana}/dia/{idDia}")
+    public Menu obtenerMenuPorSemanaDia(
+            @PathVariable int idSemana,
+            @PathVariable int idDia) {
+        return repositorioMenu.findBySemanaAndDia(idSemana, idDia)
+            .orElse(null);
+    }
 }
