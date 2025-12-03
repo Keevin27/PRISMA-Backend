@@ -28,6 +28,19 @@ public class JwtFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
+        String path = request.getServletPath();
+        
+        // Si es una ruta pública, saltar el filtro JWT completamente
+        if (path.startsWith("/auth") || 
+            path.startsWith("/api/usuarios/recuperar") || 
+            path.startsWith("/AnioAcademico") ||
+            (path.startsWith("/api/usuarios") && "POST".equalsIgnoreCase(request.getMethod()))) {
+            
+            filterChain.doFilter(request, response);
+            return; // IMPORTANTE: salir aquí sin procesar JWT
+        }
+
+        // Para rutas protegidas, procesar JWT
         final String authorizationHeader = request.getHeader("Authorization");
 
         String username = null;
@@ -49,13 +62,5 @@ public class JwtFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
-    }
-
-    @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
-        String path = request.getServletPath();
-        return path.startsWith("/auth")
-            || path.startsWith("/api/usuarios/recuperar")
-            || (path.startsWith("/api/usuarios") && "POST".equalsIgnoreCase(request.getMethod()));
     }
 }
